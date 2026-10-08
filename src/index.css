@@ -1,0 +1,24 @@
+@import "tailwindcss";
+
+/* Colores del sistema de diseño (mockups) */
+@theme {
+  --color-primario: #17505c;
+  --color-primario-oscuro: #0f3a43;
+  --color-primario-suave: #e3eef0;
+  --color-acento: #d9a404;
+  --color-fondo: #f5f7f8;
+  --color-borde: #d8e0e2;
+  --color-texto: #12211f;
+  --color-gris: #5e7073;
+  --color-exito: #1e7f4d;
+  --color-alerta: #b7791f;
+  --color-peligro: #b4322b;
+  --color-info: #3b6fa8;
+  --font-sans: "Barlow", sans-serif;
+  --font-mono: "Roboto Mono", monospace;
+}
+
+body {
+  background-color: var(--color-fondo);
+  color: var(--color-texto);
+}
