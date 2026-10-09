@@ -6,9 +6,26 @@ import { equipos, categorias } from '../../datos';
 export default function Inventario() {
   const [categoria, setCategoria] = useState('');
   const [codigo, setCodigo] = useState('');
+  const[disponibilidad, setDisponibilidad] = useState('');
+// Filtramos los equipos según su categoría
+let lista;
 
-  // Filtro simple por categoría
-  const lista = categoria === '' ? equipos : equipos.filter((e) => e.categoria === categoria);
+if (categoria === '') {
+  lista = equipos;
+} else {
+  lista = equipos.filter((equipo) => equipo.categoria === categoria);
+}
+if (codigo.trim() !== '') {
+  lista = lista.filter((equipo) =>
+    equipo.nombre.toLowerCase().includes(codigo.toLowerCase()) ||
+    equipo.modelo.toLowerCase().includes(codigo.toLowerCase())
+  );}
+if(disponibilidad === 'conLibres') {
+  lista=lista.filter((equipo)=>equipo.libres>0);
+}else if(disponibilidad === 'sinLibres') {
+  lista=lista.filter((equipo)=>equipo.libres===0);
+}
+
 
   return (
     <PanelEncargado>
@@ -25,13 +42,16 @@ export default function Inventario() {
           <option value="">Categoría: todas</option>
           {categorias.map((c) => <option key={c}>{c}</option>)}
         </select>
-        <select className="border border-borde rounded px-3 py-2 bg-white">
-          <option>Estado: todos</option>
-          <option>Disponible</option>
-          <option>Prestada</option>
-          <option>Mantenimiento</option>
-        </select>
-        <input value={codigo} onChange={(e) => setCodigo(e.target.value)} placeholder="Código de inventario" className="flex-1 border border-borde rounded px-3 py-2 font-mono bg-white" />
+<select
+  value={disponibilidad}
+  onChange={(evento) => setDisponibilidad(evento.target.value)}
+  className="border border-borde rounded px-3 py-2 bg-white"
+>
+  <option value="">Disponibilidad: todas</option>
+  <option value="conLibres">Con unidades libres</option>
+  <option value="sinLibres">Sin unidades libres</option>
+</select>
+        <input value={codigo} onChange={(e) => setCodigo(e.target.value)} placeholder="Buscar por nombre o modelo" className="flex-1 border border-borde rounded px-3 py-2 font-mono bg-white" />
       </div>
 
       <table className="w-full bg-white border border-borde rounded text-sm">
