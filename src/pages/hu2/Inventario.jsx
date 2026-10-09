@@ -52,8 +52,9 @@ if(disponibilidad === 'conLibres') {
   <option value="sinLibres">Sin unidades libres</option>
 </select>
         <input value={codigo} onChange={(e) => setCodigo(e.target.value)} placeholder="Buscar por nombre o modelo" className="flex-1 border border-borde rounded px-3 py-2 font-mono bg-white" />
+      <button onClick = {() => { setCategoria(''); setCodigo(''); setDisponibilidad(''); }} className="border border-borde rounded px-4 py-2 bg-white">Limpiar filtros</button>
       </div>
-
+    <p className="text-sm text-gris mb-3"> Mostrando {lista.length} de {equipos.length} equipos</p>
       <table className="w-full bg-white border border-borde rounded text-sm">
         <thead className="bg-gray-50 text-xs uppercase text-gris text-left">
           <tr>
