@@ -18,11 +18,12 @@ export const equipos = [
 ];
 
 export const unidades = [
-  { codigo: 'INV-OSC-0042', ubicacion: 'Almacén H-102 · anaquel 3', estado: 'Disponible', observacion: 'Sondas completas', prestamo: '—' },
-  { codigo: 'INV-OSC-0043', ubicacion: 'Almacén H-102 · anaquel 3', estado: 'Disponible', observacion: '—', prestamo: '—' },
-  { codigo: 'INV-OSC-0044', ubicacion: 'Lab. Electrónica H-210', estado: 'Prestada', observacion: 'Entregada con estuche', prestamo: 'PRE-2026-0318' },
-  { codigo: 'INV-OSC-0045', ubicacion: 'Servicio técnico externo', estado: 'Mantenimiento', observacion: 'Sonda 2 con falso contacto', prestamo: '—' },
-  { codigo: 'INV-OSC-0046', ubicacion: 'Almacén N-005', estado: 'Disponible', observacion: '—', prestamo: '—' },
+  { codigo: 'INV-OSC-0042', equipoId:1,ubicacion: 'Almacén H-102 · anaquel 3', estado: 'Disponible', observacion: 'Sondas completas', prestamo: '—' },
+  { codigo: 'INV-OSC-0043', equipoId:1,ubicacion: 'Almacén H-102 · anaquel 3', estado: 'Disponible', observacion: '—', prestamo: '—' },
+  { codigo: 'INV-OSC-0044', equipoId:1,ubicacion: 'Lab. Electrónica H-210', estado: 'Prestada', observacion: 'Entregada con estuche', prestamo: 'PRE-2026-0318' },
+  { codigo: 'INV-OSC-0045', equipoId:1,ubicacion: 'Servicio técnico externo', estado: 'Mantenimiento', observacion: 'Sonda 2 con falso contacto', prestamo: '—' },
+  { codigo: 'INV-OSC-0046', equipoId:1,ubicacion: 'Almacén N-005', estado: 'Disponible', observacion: '—', prestamo: '—' },
+  {codigo: 'INV-CAM-0009', equipoId:2,ubicacion: 'Almacén H-102 · anaquel 1', estado: 'Prestada', observacion: 'Entregada con estuche y cargador', prestamo: 'PRE-2026-0319' },
 ];
 
 export const solicitudes = [

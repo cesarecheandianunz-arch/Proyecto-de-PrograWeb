@@ -1,21 +1,52 @@
 import { useState } from 'react';
+import { useParams } from 'react-router-dom';
 import PanelEncargado from '../../components/PanelEncargado';
 import Etiqueta from '../../components/Etiqueta';
-import { unidades } from '../../datos';
-
+import { equipos, unidades } from '../../datos';
 export default function DetalleEquipo() {
+  const { id } = useParams();
   const [pestana, setPestana] = useState('unidades');
   const [duracion, setDuracion] = useState(7);
   const [autorizacion, setAutorizacion] = useState(true);
   const [renovacion, setRenovacion] = useState(false);
   const [penalidad, setPenalidad] = useState(15);
   const [modalAbierto, setModalAbierto] = useState(false);
-
+  const [unidadesLocales, setUnidadesLocales] = useState(unidades);
+  const [nuevoCodigo, setNuevoCodigo] = useState('');
+  const [nuevaUbicacion, setNuevaUbicacion] = useState('');
+  const [nuevaObservacion, setNuevaObservacion] = useState('');
+  const equipo = equipos.find((equipo) => equipo.id === Number(id));
+  if (!equipo) {
+    return <p> Equipo no encontrado</p>;
+  }
+  const unidadesEquipo = unidades.filter((unidad) => unidad.equipoId === equipo.id);
+  function guardarUnidad() {
+    if (nuevoCodigo.trim() === '' || nuevaUbicacion.trim() === '') {
+      alert('Completa el código y la ubicación');
+      return;
+    }
+    const nuevaUnidad = {
+      codigo: nuevoCodigo.trim(),
+      equipoId: equipo.id,
+      ubicacion: nuevaUbicacion.trim(),
+      estado: 'Disponible',
+      observacion: nuevaObservacion.trim(),
+      prestamo: '—'
+    };
+    setUnidadesLocales([
+      ...unidadesLocales,
+      nuevaUnidad
+    ]);
+    setNuevoCodigo('');
+    setNuevaUbicacion('');
+    setNuevaObservacion('');
+    setModalAbierto(false);
+}
   return (
     <PanelEncargado>
-      <p className="text-sm text-gris">Inventario / Medición / Osciloscopio TBS1052B</p>
-      <h1 className="text-3xl font-semibold">Osciloscopio TBS1052B</h1>
-      <p className="text-gris text-sm mb-6">Tektronix · TBS1052B · 5 unidades registradas · Almacén H-102</p>
+      <p className="text-sm text-gris">Inventario / {equipo.categoria} / {equipo.nombre}</p>
+      <h1 className="text-3xl font-semibold">{equipo.nombre}</h1>
+      <p className="text-gris text-sm mb-6">{equipo.marca} · {equipo.modelo} · {unidadesEquipo.length} unidades registradas · Almacén H-102</p>
 
       <div className="flex gap-4 border-b border-borde mb-6">
         <button onClick={() => setPestana('unidades')} className={'pb-2 ' + (pestana === 'unidades' ? 'border-b-2 border-primario text-primario' : 'text-gris')}>Unidades</button>
@@ -38,7 +69,7 @@ export default function DetalleEquipo() {
               </tr>
             </thead>
             <tbody>
-              {unidades.map((u) => (
+              {unidadesEquipo.map((u) => (
                 <tr key={u.codigo} className="border-t border-borde">
                   <td className="p-3 font-mono font-semibold">{u.codigo}</td>
                   <td className="p-3 text-gris">{u.ubicacion}</td>
@@ -84,12 +115,27 @@ export default function DetalleEquipo() {
         <div className="fixed inset-0 bg-black/40 grid place-items-center">
           <div className="bg-white rounded p-6 w-full max-w-md">
             <h2 className="text-xl font-semibold mb-4">Nueva unidad</h2>
-            <input placeholder="Código: INV-OSC-0047" className="w-full border border-borde rounded px-3 py-2 mb-3 font-mono" />
-            <input placeholder="Ubicación" className="w-full border border-borde rounded px-3 py-2 mb-3" />
-            <textarea placeholder="Observaciones" className="w-full border border-borde rounded px-3 py-2 mb-3" />
+            <input
+              value={nuevoCodigo}
+              onChange={(e) => setNuevoCodigo(e.target.value)}
+              placeholder="Código: INV-OSC-0047"
+              className="w-full border border-borde rounded px-3 py-2 mb-3 font-mono"
+            />
+            <input
+              value={nuevaUbicacion}
+              onChange={(e) => setNuevaUbicacion(e.target.value)}
+              placeholder="Ubicación"
+              className="w-full border border-borde rounded px-3 py-2 mb-3"
+            />
+            <textarea
+              value={nuevaObservacion}
+              onChange={(e) => setNuevaObservacion(e.target.value)}
+              placeholder="Observaciones"
+              className="w-full border border-borde rounded px-3 py-2 mb-3"
+            />
             <div className="flex justify-end gap-2">
               <button onClick={() => setModalAbierto(false)} className="border border-primario text-primario px-4 py-2 rounded">Cancelar</button>
-              <button onClick={() => setModalAbierto(false)} className="bg-primario text-white px-4 py-2 rounded">Guardar unidad</button>
+              <button onClick={guardarUnidad} className="bg-primario text-white px-4 py-2 rounded">Guardar unidad</button>
             </div>
           </div>
         </div>
