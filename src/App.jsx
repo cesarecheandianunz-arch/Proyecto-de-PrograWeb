@@ -44,7 +44,7 @@ export default function App() {
 
       <Route path="/encargado/inventario" element={<Inventario />} />
       <Route path="/encargado/nuevo-equipo" element={<NuevoEquipo />} />
-      <Route path="/encargado/equipo" element={<DetalleEquipo />} />
+      <Route path="/encargado/equipo/:id" element={<DetalleEquipo />} />
       <Route path="/encargado/solicitudes" element={<Bandeja />} />
       <Route path="/encargado/entrega" element={<RegistrarEntrega />} />
       <Route path="/encargado/constancia" element={<Constancia />} />

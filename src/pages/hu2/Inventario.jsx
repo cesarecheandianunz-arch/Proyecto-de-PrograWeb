@@ -1,25 +1,52 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import PanelEncargado from '../../components/PanelEncargado';
-import { equipos, categorias } from '../../datos';
+import { equipos, categorias, unidades } from '../../datos';
 
 export default function Inventario() {
   const [categoria, setCategoria] = useState('');
   const [codigo, setCodigo] = useState('');
   const[disponibilidad, setDisponibilidad] = useState('');
 // Filtramos los equipos según su categoría
+  const equiposConteo= equipos.map((equipo)=> {
+  const unidadesEquipo= unidades.filter((unidad)=> unidad.equipoId === equipo.id);
+  const total = unidadesEquipo.length;
+  const libres = unidadesEquipo.filter((unidad) => unidad.estado=== 'Disponible').length;
+  const prestadas= unidadesEquipo.filter((unidad) => unidad.estado=== 'Prestada').length;
+  const mantenimiento= unidadesEquipo.filter((unidad)=> unidad.estado=== 'Mantenimiento').length;
+  const baja= unidadesEquipo.filter((unidad)=> unidad.estado=== 'Dada de baja').length;
+  return {
+    ...equipo,
+    total,
+    libres,
+    prestadas,
+    mantenimiento,
+    baja,
+  };
+});
 let lista;
 
 if (categoria === '') {
-  lista = equipos;
+  lista = equiposConteo;
 } else {
-  lista = equipos.filter((equipo) => equipo.categoria === categoria);
+  lista = equiposConteo.filter((equipo) => equipo.categoria === categoria);
 }
 if (codigo.trim() !== '') {
-  lista = lista.filter((equipo) =>
-    equipo.nombre.toLowerCase().includes(codigo.toLowerCase()) ||
-    equipo.modelo.toLowerCase().includes(codigo.toLowerCase())
-  );}
+  const texto = codigo.trim().toLowerCase();
+  lista = lista.filter((equipo) => {
+
+    const coincideNombre =
+      equipo.nombre.toLowerCase().includes(texto) ||
+      equipo.modelo.toLowerCase().includes(texto);
+
+    const coincideCodigo = unidades.some((unidad) =>
+      unidad.equipoId === equipo.id &&
+      unidad.codigo.toLowerCase().includes(texto)
+    );
+    return coincideNombre || coincideCodigo;
+  });
+}
+
 if(disponibilidad === 'conLibres') {
   lista=lista.filter((equipo)=>equipo.libres>0);
 }else if(disponibilidad === 'sinLibres') {
@@ -32,7 +59,7 @@ if(disponibilidad === 'conLibres') {
       <div className="flex justify-between items-end mb-6">
         <div>
           <h1 className="text-3xl font-semibold">Inventario de equipos</h1>
-          <p className="text-gris text-sm">{equipos.length} modelos registrados en el Almacén H-102</p>
+          <p className="text-gris text-sm">{equipos.length} modelos  {unidades.length}unidades registrados en el Almacén H-102</p>
         </div>
         <Link to="/encargado/nuevo-equipo" className="bg-primario text-white px-4 py-2 rounded">Nuevo equipo</Link>
       </div>
@@ -75,7 +102,7 @@ if(disponibilidad === 'conLibres') {
               <td className="p-3 text-gris">{e.categoria}</td>
               <td className="p-3 font-mono text-exito">{e.libres} libres de {e.total}</td>
               <td className="p-3 text-primario">
-                <Link to="/encargado/equipo">Unidades</Link> · <Link to="/encargado/equipo">Condiciones</Link> · <Link to="/encargado/nuevo-equipo">Editar</Link>
+                <Link to={`/encargado/equipo/${e.id}`}>Unidades</Link>· <Link to={`/encargado/equipo/${e.id}/condiciones`}>Condiciones</Link> · <Link to={`/encargado/nuevo-equipo/${e.id}/editar`}>Editar</Link>
               </td>
             </tr>
           ))}
