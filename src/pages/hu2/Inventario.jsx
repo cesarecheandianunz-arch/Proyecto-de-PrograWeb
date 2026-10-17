@@ -1,9 +1,11 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import PanelEncargado from '../../components/PanelEncargado';
-import { equipos, categorias, unidades } from '../../datos';
+import { categorias } from '../../datos';
+import { useInventario } from '../../context/InventarioContext.jsx';
 
 export default function Inventario() {
+  const {equipos, unidades} = useInventario();
   const [categoria, setCategoria] = useState('');
   const [codigo, setCodigo] = useState('');
   const[disponibilidad, setDisponibilidad] = useState('');

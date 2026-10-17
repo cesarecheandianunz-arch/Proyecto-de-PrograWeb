@@ -2,24 +2,31 @@ import { useState } from 'react';
 import { useParams } from 'react-router-dom';
 import PanelEncargado from '../../components/PanelEncargado';
 import Etiqueta from '../../components/Etiqueta';
-import { equipos, unidades } from '../../datos';
+import { useInventario } from '../../context/InventarioContext.jsx';
 export default function DetalleEquipo() {
   const { id } = useParams();
+  const { equipos, unidades, setUnidades } = useInventario();
   const [pestana, setPestana] = useState('unidades');
   const [duracion, setDuracion] = useState(7);
   const [autorizacion, setAutorizacion] = useState(true);
   const [renovacion, setRenovacion] = useState(false);
   const [penalidad, setPenalidad] = useState(15);
   const [modalAbierto, setModalAbierto] = useState(false);
-  const [unidadesLocales, setUnidadesLocales] = useState(unidades);
   const [nuevoCodigo, setNuevoCodigo] = useState('');
   const [nuevaUbicacion, setNuevaUbicacion] = useState('');
   const [nuevaObservacion, setNuevaObservacion] = useState('');
+  const [modalEstadoAbierto, setModalEstadoAbierto] = useState(false);
+  const [unidadSeleccionada, setUnidadSeleccionada] = useState(null);
+  const [nuevoEstado, setNuevoEstado] = useState('');
+  const [motivoCambio, setMotivoCambio] = useState('');
   const equipo = equipos.find((equipo) => equipo.id === Number(id));
+
   if (!equipo) {
     return <p> Equipo no encontrado</p>;
   }
-  const unidadesEquipo = unidades.filter((unidad) => unidad.equipoId === equipo.id);
+  const unidadesEquipo = unidades.filter(
+    (unidad) => unidad.equipoId === equipo.id);
+
   function guardarUnidad() {
     if (nuevoCodigo.trim() === '' || nuevaUbicacion.trim() === '') {
       alert('Completa el código y la ubicación');
@@ -33,15 +40,47 @@ export default function DetalleEquipo() {
       observacion: nuevaObservacion.trim(),
       prestamo: '—'
     };
-    setUnidadesLocales([
-      ...unidadesLocales,
-      nuevaUnidad
-    ]);
+    setUnidades((anteriores) => [...anteriores, nuevaUnidad]);
     setNuevoCodigo('');
     setNuevaUbicacion('');
     setNuevaObservacion('');
     setModalAbierto(false);
-}
+  }
+  function abrirCambioEstado(unidad) {
+    setUnidadSeleccionada(unidad);
+    setNuevoEstado('');
+    setMotivoCambio('');
+    setModalEstadoAbierto(true);
+  }
+  function guardarCambioEstado() {
+    if (nuevoEstado === '') {
+      alert('Selecciona el nuevo estado');
+      return;
+    }
+    if (motivoCambio.trim() === '') {
+      alert('Ingresa el motivo del cambio');
+      return;
+    }
+    setUnidades((anteriores) =>
+      anteriores.map((unidad) => {
+        if (unidad.codigo === unidadSeleccionada.codigo) {
+          return {
+            ...unidad,
+            estado: nuevoEstado,
+            motivoCambio: motivoCambio.trim()
+          };
+        } else {
+          return unidad;
+        }
+
+      })
+    );
+    setModalEstadoAbierto(false);
+    setUnidadSeleccionada(null);
+    setNuevoEstado('');
+    setMotivoCambio('');
+  }
+
   return (
     <PanelEncargado>
       <p className="text-sm text-gris">Inventario / {equipo.categoria} / {equipo.nombre}</p>
@@ -66,6 +105,7 @@ export default function DetalleEquipo() {
                 <th className="p-3">Estado</th>
                 <th className="p-3">Observaciones</th>
                 <th className="p-3">Préstamo vigente</th>
+                <th className="p-3">Acciones</th>
               </tr>
             </thead>
             <tbody>
@@ -76,6 +116,10 @@ export default function DetalleEquipo() {
                   <td className="p-3"><Etiqueta estado={u.estado} /></td>
                   <td className="p-3 text-gris">{u.observacion}</td>
                   <td className="p-3 font-mono">{u.prestamo}</td>
+                  <td className="p-3">
+                    <button onClick={() => abrirCambioEstado(u)} className="text-primario font-semibold">
+                      Cambiar estado</button>
+                  </td>
                 </tr>
               ))}
             </tbody>
@@ -140,6 +184,66 @@ export default function DetalleEquipo() {
           </div>
         </div>
       )}
+      {/* Modal para cambiar estado de unidad */}
+      {modalEstadoAbierto && unidadSeleccionada && (
+        <div className="fixed inset-0 bg-black/40 grid place-items-center">
+          <div className="bg-white rounded p-6 w-full max-w-md">
+
+            <h2 className="text-xl font-semibold mb-1">
+              Cambiar estado
+            </h2>
+
+            <p className="text-sm text-gris mb-4">
+              Unidad: {unidadSeleccionada.codigo}
+            </p>
+
+            <p className="text-sm mb-3">
+              Estado actual: <strong>{unidadSeleccionada.estado}</strong>
+            </p>
+
+            <label className="block text-xs font-semibold uppercase mb-1">
+              Nuevo estado
+            </label>
+
+            <select
+              value={nuevoEstado}
+              onChange={(e) => setNuevoEstado(e.target.value)}
+              className="w-full border border-borde rounded px-3 py-2 mb-4"
+            >
+              <option value="">Seleccionar estado</option>
+              <option value="Disponible">Disponible</option>
+              <option value="Prestada">Prestada</option>
+              <option value="Mantenimiento">Mantenimiento</option>
+              <option value="Dada de baja">Dada de baja</option>
+            </select>
+
+            <label className="block text-xs font-semibold uppercase mb-1">
+              Motivo del cambio
+            </label>
+
+            <textarea
+              value={motivoCambio}
+              onChange={(e) => setMotivoCambio(e.target.value)}
+              placeholder="Ej. Equipo enviado a mantenimiento por falla en la sonda"
+              className="w-full border border-borde rounded px-3 py-2 mb-4"
+            />
+
+            <div className="flex justify-end gap-2">
+
+              <button
+                onClick={() => setModalEstadoAbierto(false)}
+                className="border border-primario text-primario px-4 py-2 rounded"
+              >
+                Cancelar
+              </button>
+              <button
+                onClick={guardarCambioEstado}
+                className="bg-primario text-white px-4 py-2 rounded">Guardar cambio</button>
+            </div>
+          </div>
+        </div>
+      )}
+
     </PanelEncargado>
   );
 }
