@@ -12,6 +12,7 @@ import Error from './pages/hu1/Error';
 import Inventario from './pages/hu2/Inventario';
 import NuevoEquipo from './pages/hu2/NuevoEquipo';
 import DetalleEquipo from './pages/hu2/DetalleEquipo';
+import FichaPublicaEquipo from './pages/hu2/FichaPublicaEquipo';
 // HU-3 Catálogo y solicitud
 import Catalogo from './pages/hu3/Catalogo';
 import DetalleCatalogo from './pages/hu3/DetalleCatalogo';
@@ -38,6 +39,7 @@ export default function App() {
       <Route path="/acceso-denegado" element={<Error codigo={403} />} />
 
       <Route path="/catalogo" element={<Catalogo />} />
+      <Route path="/equipos/:id" element={<FichaPublicaEquipo />} />
       <Route path="/catalogo/:id" element={<DetalleCatalogo />} />
       <Route path="/catalogo/:id/solicitar" element={<Solicitar />} />
       <Route path="/mis-solicitudes" element={<MisSolicitudes />} />
@@ -45,6 +47,8 @@ export default function App() {
       <Route path="/encargado/inventario" element={<Inventario />} />
       <Route path="/encargado/nuevo-equipo" element={<NuevoEquipo />} />
       <Route path="/encargado/equipo/:id" element={<DetalleEquipo />} />
+      <Route path="/encargado/equipo/:id/condiciones" element={<DetalleEquipo />} />
+      <Route path="/encargado/equipo/:id/editar" element={<NuevoEquipo />} />
       <Route path="/encargado/solicitudes" element={<Bandeja />} />
       <Route path="/encargado/entrega" element={<RegistrarEntrega />} />
       <Route path="/encargado/constancia" element={<Constancia />} />

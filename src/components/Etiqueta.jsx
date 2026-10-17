@@ -5,11 +5,12 @@ const colores = {
   Prestada: 'text-info border-blue-300 bg-blue-50',
   Enviada: 'text-info border-blue-300 bg-blue-50',
   Mantenimiento: 'text-alerta border-amber-300 bg-amber-50',
+  'Dada de baja': 'text-gris border-borde bg-gray-100',
   Rechazada: 'text-peligro border-red-300 bg-red-50',
   Entregada: 'text-white border-primario bg-primario',
   Devuelta: 'text-gris border-borde bg-gray-100',
 };
 
 export default function Etiqueta({ estado }) {
-  return <span className={'text-xs border rounded px-2 py-1 ' + colores[estado]}>{estado}</span>;
+  return <span className={'text-xs border rounded px-2 py-1 ' + (colores[estado] || 'text-gris border-borde')}>{estado}</span>;
 }
