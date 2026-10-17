@@ -43,9 +43,16 @@ export default function Bandeja() {
         ))}
       </div>
 
-      <p className="bg-red-50 border-l-4 border-peligro p-3 text-sm mb-4">
-        <b>Aviso de deuda pendiente.</b> 2 solicitantes de esta bandeja tienen penalidades sin regularizar.
-      </p>
+      <div className="bg-red-50 border-l-4 border-peligro p-3 text-sm mb-4">
+        <b>Aviso de deuda pendiente.</b>{' '}
+        2 solicitantes de esta bandeja tienen penalidades sin regularizar.
+        <Link
+          to="/encargado/historial"
+          className="ml-2 text-primario underline font-semibold"
+        >
+          Ver historial
+        </Link>
+      </div>
 
       <table className="w-full bg-white border border-borde text-sm">
         <thead className="bg-gray-50 text-xs uppercase text-gris text-left">
