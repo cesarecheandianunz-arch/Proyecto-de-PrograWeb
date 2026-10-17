@@ -17,7 +17,7 @@ export default function NuevoEquipo() {
     if (accesorio === '') return;
     setAccesorios([...accesorios, accesorio]);
     setAccesorio('');
-  }
+  } 
 
   function quitarAccesorio(nombreAccesorio) {
     setAccesorios(accesorios.filter((a) => a !== nombreAccesorio));
