@@ -8,7 +8,6 @@ export default function CatalogoSolicitud({ datosIniciales = [], onCrearSolicitu
   const [motivoSolicitud, setMotivoSolicitud] = useState("");
   const [solicitudEnviada, setSolicitudEnviada] = useState(false);
 
-  // Datos de respaldo basados en el esquema de tu proyecto universitario
   const equipos = datosIniciales.length > 0 ? datosIniciales : [
     { id: 1, codigo: "EQ-SRV-001", nombre: "Servidor Rack Dell PowerEdge", categoria: "Servidores", estado: "Disponible", serial: "SV98234XYZ" },
     { id: 2, codigo: "EQ-LAP-042", nombre: "Laptop Lenovo ThinkPad T14", categoria: "Portátiles", estado: "Disponible", serial: "TP88412ABC" },
