@@ -4,7 +4,6 @@ import Etiqueta from '../../components/Etiqueta';
 import { solicitudes } from '../../datos';
 
 export default function MisSolicitudes() {
-  // Solo las solicitudes de Renzo (el estudiante de prueba)
   const [lista, setLista] = useState(solicitudes.filter((s) => s.estudiante === 'Renzo Mendoza Cárdenas'));
   const [estado, setEstado] = useState('');
 
