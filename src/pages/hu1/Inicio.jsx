@@ -2,14 +2,15 @@ import { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import Navbar from '../../components/Navbar';
 import Footer from '../../components/Footer';
-import { equipos } from '../../datos';
+import { useInventario } from '../../context/InventarioContext';
 
 export default function Inicio() {
+  const { equiposConConteo: equipos } = useInventario();
   const [busqueda, setBusqueda] = useState('');
   const navigate = useNavigate();
 
   function buscar() {
-    navigate('/catalogo');
+    navigate('/catalogo?vista=publico&buscar=' + encodeURIComponent(busqueda.trim()));
   }
 
   return (
@@ -42,7 +43,7 @@ export default function Inicio() {
       <section className="max-w-6xl mx-auto px-6 py-10 w-full">
         <div className="flex justify-between mb-4">
           <h2 className="text-xl font-semibold">Equipos destacados</h2>
-          <Link to="/catalogo" className="text-primario">Ver todo el catálogo →</Link>
+          <Link to="/catalogo?vista=publico" className="text-primario">Ver todo el catálogo →</Link>
         </div>
         <div className="grid md:grid-cols-4 gap-4">
           {equipos.slice(0, 4).map((e) => (
@@ -50,6 +51,7 @@ export default function Inicio() {
               <p className="font-semibold">{e.nombre}</p>
               <p className="text-sm text-gris">{e.marca} · {e.categoria}</p>
               <p className="font-mono text-sm text-exito mt-2">{e.libres} / {e.total} libres</p>
+              <Link to={`/equipos/${e.id}`} className="inline-block text-primario underline mt-3">Ver equipo</Link>
             </div>
           ))}
         </div>

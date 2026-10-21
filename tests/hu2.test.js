@@ -1,14 +1,14 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { contarUnidades, estadosPermitidos, validarUnidad, validarCondiciones, validarEquipo, impedimentoEliminar } from '../src/pages/hu2/inventarioUtils.js';
+import { contarUnidades, estadosPermitidos, validarUnidad, validarCondiciones, validarEquipo, impedimentoEliminar, codigoInventarioValido } from '../src/pages/hu2/inventarioUtils.js';
 
 const equipo = { id: 1, nombre: 'Osciloscopio', marca: 'Tektronix', modelo: 'TBS', categoria: 'Medición', descripcion: '', fotografias: [] };
 const unidades = [
-  { equipoId: 1, codigo: 'INV-001', estado: 'Disponible', prestamo: '—' },
-  { equipoId: 1, codigo: 'INV-002', estado: 'Prestada', prestamo: 'PRE-001' },
-  { equipoId: 1, codigo: 'INV-003', estado: 'Mantenimiento', prestamo: '—' },
-  { equipoId: 1, codigo: 'INV-004', estado: 'Dada de baja', prestamo: '—' },
-  { equipoId: 2, codigo: 'OTRO-001', estado: 'Disponible', prestamo: '—' },
+  { equipoId: 1, codigo: 'INV-OSC-0001', estado: 'Disponible', prestamo: '—' },
+  { equipoId: 1, codigo: 'INV-OSC-0002', estado: 'Prestada', prestamo: 'PRE-001' },
+  { equipoId: 1, codigo: 'INV-OSC-0003', estado: 'Mantenimiento', prestamo: '—' },
+  { equipoId: 1, codigo: 'INV-OSC-0004', estado: 'Dada de baja', prestamo: '—' },
+  { equipoId: 2, codigo: 'INV-CAM-0001', estado: 'Disponible', prestamo: '—' },
 ];
 
 test('cuenta solo las unidades del equipo y reemplaza contadores antiguos', () => {
@@ -23,7 +23,7 @@ test('cuenta solo las unidades del equipo y reemplaza contadores antiguos', () =
 
 test('cambiar una unidad a mantenimiento actualiza la disponibilidad', () => {
   const actualizadas = unidades.map((unidad) => {
-    if (unidad.codigo === 'INV-001') {
+    if (unidad.codigo === 'INV-OSC-0001') {
       return { ...unidad, estado: 'Mantenimiento' };
     } else {
       return unidad;
@@ -35,9 +35,9 @@ test('cambiar una unidad a mantenimiento actualiza la disponibilidad', () => {
 });
 
 test('detecta códigos duplicados aunque cambien mayúsculas, espacios o equipo', () => {
-  assert.ok(validarUnidad(' inv-001 ', 'Almacén', unidades).codigo);
-  assert.ok(validarUnidad('otro-001', 'Almacén', unidades).codigo);
-  assert.deepEqual(validarUnidad('NUEVO', 'Almacén', unidades), {});
+  assert.equal(validarUnidad(' inv-osc-0001 ', 'Almacén', unidades).codigo, 'Este código ya está registrado en el inventario.');
+  assert.equal(validarUnidad('inv-cam-0001', 'Almacén', unidades).codigo, 'Este código ya está registrado en el inventario.');
+  assert.deepEqual(validarUnidad('INV-OSC-0047', 'Almacén', unidades), {});
 });
 
 test('rechaza los campos de unidad vacíos', () => {
@@ -85,7 +85,44 @@ test('eliminar: protege préstamos, solicitudes e historial asociado', () => {
   assert.ok(impedimentoEliminar(equipo, unidades, [], []));
   const sinPrestadas = unidades.filter((unidad) => unidad.estado !== 'Prestada');
   assert.ok(impedimentoEliminar(equipo, sinPrestadas, [{ equipo: equipo.nombre }], []));
-  assert.ok(impedimentoEliminar(equipo, sinPrestadas, [], [{ unidad: 'INV-001' }]));
+  assert.ok(impedimentoEliminar(equipo, sinPrestadas, [], [{ unidad: 'INV-OSC-0001' }]));
   assert.equal(impedimentoEliminar(equipo, sinPrestadas, [], []), '');
-  assert.equal(impedimentoEliminar(equipo, [], [{ equipo: 'Otro' }], [{ unidad: 'OTRO-001' }]), '');
+  assert.equal(impedimentoEliminar(equipo, [], [{ equipo: 'Otro' }], [{ unidad: 'INV-CAM-0001' }]), '');
+});
+
+
+test('código: acepta el formato del mockup y normaliza mayúsculas y espacios externos', () => {
+  for (const codigo of ['INV-OSC-0047', ' inv-cam-0009 ', 'INV-AAA-0000']) {
+    assert.equal(codigoInventarioValido(codigo), true);
+    assert.deepEqual(validarUnidad(codigo, 'Almacén H-102', []), {});
+  }
+});
+
+test('código: rechaza prefijos, longitudes, letras y números incorrectos', () => {
+  const invalidos = [
+    '', 'ABC', 'INV-0047', 'EQ-OSC-0047', 'INV-OS-0047', 'INV-OSCA-0047',
+    'INV-OS1-0047', 'INV-ÑSC-0047', 'INV-OSC-047', 'INV-OSC-00047',
+    'INV-OSC-00A7', 'INV-OSC-0047-1', 'INV-OSC-12.4', 'INV-OSC-１２３４',
+  ];
+  for (const codigo of invalidos) {
+    assert.equal(codigoInventarioValido(codigo), false, codigo);
+    assert.ok(validarUnidad(codigo, 'Almacén H-102', []).codigo, codigo);
+  }
+});
+
+test('eliminar: reconoce una solicitud antigua después de renombrar el equipo', () => {
+  const inicial = { id: 3, nombre: 'Kit Arduino' };
+  const renombrado = { ...inicial, nombre: 'Kit Arduino Mega' };
+  const solicitudesAntiguas = [{ equipo: 'Kit Arduino' }];
+
+  assert.ok(impedimentoEliminar(renombrado, [], solicitudesAntiguas, [], [inicial]));
+});
+
+test('eliminar: reconoce referencias por ID y distingue equipos con nombres iguales', () => {
+  const renombrado = { id: 3, nombre: 'Kit actualizado' };
+
+  assert.ok(impedimentoEliminar(renombrado, [], [{ equipoId: 3, equipo: 'Nombre anterior' }], []));
+  assert.ok(impedimentoEliminar(renombrado, [], [{ equipoId: '3' }], []));
+  assert.equal(impedimentoEliminar(renombrado, [], [{ equipoId: 9, equipo: renombrado.nombre }], []), '');
+  assert.ok(impedimentoEliminar(renombrado, [], [], [{ equipoId: 3 }]));
 });

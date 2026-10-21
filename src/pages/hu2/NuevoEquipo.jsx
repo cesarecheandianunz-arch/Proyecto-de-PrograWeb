@@ -3,6 +3,7 @@ import { Link, useParams, useNavigate } from 'react-router-dom';
 import PanelEncargado from '../../components/PanelEncargado';
 import CampoInventario from '../../components/CampoInventario';
 import FotoEquipo from '../../components/FotoEquipo';
+import SelectorFotos from '../../components/SelectorFotos';
 import { categorias } from '../../datos';
 import { useInventario } from '../../context/InventarioContext.jsx';
 import { normalizarTexto, validarEquipo } from './inventarioUtils';
@@ -23,15 +24,18 @@ export default function NuevoEquipo() {
   const [accesorio, setAccesorio] = useState('');
   const [accesorios, setAccesorios] = useState([]);
   const [fotosTexto, setFotosTexto] = useState('');
+  const [fotosArchivo, setFotosArchivo] = useState([]);
   const [errores, setErrores] = useState({});
   const [mensaje, setMensaje] = useState('');
   const claveBorrador = `hu2-borrador-${id || 'nuevo'}`;
   // split separa las líneas; trim limpia espacios; filter quita líneas vacías.
-  const fotografias = fotosTexto.split('\n').map((url) => {
+  const fotosEnlaces = fotosTexto.split('\n').map((url) => {
     return url.trim();
   }).filter((url) => {
     return url !== '';
   });
+
+  const fotografias = [...fotosArchivo, ...fotosEnlaces];
 
   let titulo = 'Nuevo equipo';
   let textoBoton = 'Guardar equipo';
@@ -52,9 +56,11 @@ export default function NuevoEquipo() {
       setAccesorios([]);
     }
     if (Array.isArray(datos.fotografias)) {
-      setFotosTexto(datos.fotografias.join('\n'));
+      setFotosArchivo(datos.fotografias.filter((foto) => foto.startsWith('data:image/')));
+      setFotosTexto(datos.fotografias.filter((foto) => !foto.startsWith('data:image/')).join('\n'));
     } else {
       setFotosTexto('');
+      setFotosArchivo([]);
     }
     setAccesorio(datos.accesorio || '');
     setErrores({});
@@ -91,7 +97,7 @@ export default function NuevoEquipo() {
   function guardarBorrador() {
     try {
       // Un borrador puede estar incompleto y no aparece en el inventario.
-      localStorage.setItem(claveBorrador, JSON.stringify({ ...obtenerDatos(), accesorio, fotografias: fotosTexto.split('\n') }));
+      localStorage.setItem(claveBorrador, JSON.stringify({ ...obtenerDatos(), accesorio, fotografias }));
       setMensaje('Borrador guardado en este navegador. Puedes recuperarlo con «Cargar borrador».');
     } catch {
       setMensaje('No se pudo guardar el borrador en este navegador.');
@@ -234,7 +240,11 @@ export default function NuevoEquipo() {
             {accesorios.length === 0 && <p className="text-sm text-gris">Sin accesorios registrados.</p>}
             {accesorios.map((actual) => <div key={actual} className="flex justify-between gap-3 border border-borde rounded px-3 py-2">
               {actual}
-              <button type="button" onClick={() => { setAccesorios((anteriores) => anteriores.filter((valor) => valor !== actual)); setMensaje('Accesorio quitado del formulario. Guarda el equipo para conservar el cambio.'); }} className="text-peligro">Quitar</button>
+              <button
+                type="button"
+                onClick={() => { setAccesorios((anteriores) => anteriores.filter((valor) => valor !== actual)); setMensaje('Accesorio quitado del formulario. Guarda el equipo para conservar el cambio.'); }}
+                className="text-peligro"
+              >Quitar</button>
             </div>)}
             <CampoInventario id="accesorio" etiqueta="Agregar accesorio" error={errores.accesorio}>
               <div className="flex gap-2">
@@ -251,6 +261,11 @@ export default function NuevoEquipo() {
             </CampoInventario>
           </div>
           <div className="bg-white border border-borde rounded p-6 space-y-4">
+            <h2 className="font-semibold">Fotografías</h2>
+            <SelectorFotos
+              onAgregar={(imagen) => setFotosArchivo((actuales) => [...actuales, imagen])}
+              onError={(texto) => setErrores((anteriores) => ({ ...anteriores, fotografias: texto }))}
+            />
             <CampoInventario id="fotografias" etiqueta="Fotografías por enlace" error={errores.fotografias}>
               <textarea
                 id="fotografias"
@@ -263,7 +278,8 @@ export default function NuevoEquipo() {
                 className={campoClase}
               />
             </CampoInventario>
-            <p className="text-xs text-gris">Opcional: una dirección de imagen por línea. La primera será la principal.</p>
+            <p className="text-xs text-gris">Opcional: una dirección de imagen por línea. Hasta tres fotografías en total; las seleccionadas desde archivos aparecen primero.</p>
+            {fotosArchivo.length > 0 && <button type="button" onClick={() => setFotosArchivo([])} className="text-peligro underline">Quitar fotografías seleccionadas</button>}
             {fotografias.length === 0 && <p className="text-sm text-gris">Sin fotografías registradas.</p>}
             {fotografias.map((url, indice) => <div key={`${indice}-${url}`} className="aspect-square bg-gray-100 rounded overflow-hidden grid place-items-center"><FotoEquipo url={url} nombre={`${nombre || 'Equipo'} · foto ${indice + 1}`} /></div>)}
           </div>

@@ -19,13 +19,27 @@ function leerGuardados(clave, iniciales) {
 
 export function InventarioProvider({ children }) {
   const [equipos, setEquipos] = useState(() => leerGuardados('equipos', equiposIniciales));
-  const [unidades, setUnidades] = useState(() => leerGuardados('unidades', unidadesIniciales));
+  const [unidades, setUnidades] = useState(() => {
+    const guardadas = leerGuardados('unidades', unidadesIniciales);
+    // Completamos solo las unidades semilla ausentes, una vez, sin reemplazar cambios.
+    try {
+      if (localStorage.getItem('unidades-semilla-v2')) return guardadas;
+    } catch { return guardadas; }
+    const completas = [...guardadas];
+    for (const inicial of unidadesIniciales) {
+      const existeEquipo = equipos.filter((e) => e.id === inicial.equipoId).length > 0;
+      const existeCodigo = completas.filter((u) => u.codigo === inicial.codigo).length > 0;
+      if (existeEquipo && !existeCodigo) completas.push(inicial);
+    }
+    return completas;
+  });
   const [errorPersistencia, setErrorPersistencia] = useState('');
 
   useEffect(() => {
     try {
       localStorage.setItem('equipos', JSON.stringify(equipos));
       localStorage.setItem('unidades', JSON.stringify(unidades));
+      localStorage.setItem('unidades-semilla-v2', '1');
       setErrorPersistencia('');
     } catch {
       setErrorPersistencia('Los cambios están en esta sesión, pero el navegador no pudo guardarlos. Podrían perderse al recargar.');

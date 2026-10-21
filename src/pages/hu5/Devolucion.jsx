@@ -1,116 +1,81 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import PanelEncargado from '../../components/PanelEncargado';
-import Renovacion from './Renovacion';
-
-const PRESTAMO_DEMO = {
-  codigo: 'PRE-2026-0291',
-  estudiante: 'Camila Quispe Andrade',
-  equipo: 'Tableta Wacom Intuos',
-  unidad: 'INV-TAB-0004',
-  fechaPactada: '2026-09-11',
-  fechaPactadaTexto: '11/09/2026',
-};
-
-const ACCESORIOS_INICIALES = [
-  { nombre: 'Lápiz digital', devuelto: true },
-  { nombre: 'Cable USB', devuelto: false },
-  { nombre: 'Estuche', devuelto: true },
-];
-
-function formatearFecha(fecha) {
-  if (!fecha) return '';
-  const [anio, mes, dia] = fecha.split('-');
-  return `${dia}/${mes}/${anio}`;
-}
-
-function calcularDiasRetraso(fechaRetorno, fechaPactada) {
-  if (!fechaRetorno || !fechaPactada) return 0;
-  const retorno = new Date(`${fechaRetorno}T00:00:00`);
-  const pactada = new Date(`${fechaPactada}T00:00:00`);
-  return Math.max(0, Math.round((retorno - pactada) / 86400000));
-}
+import { useParams, Link, useNavigate } from 'react-router-dom';
+import { usePrestamos } from '../../context/PrestamosContext';
+import { hoyISO, mostrarFecha, diasEntre } from '../../utils/prestamos';
+import SelectorFotos from '../../components/SelectorFotos';
 
 export default function Devolucion() {
-  const [codigo, setCodigo] = useState(PRESTAMO_DEMO.codigo);
+  const { codigo: codigoRuta } = useParams();
+  const navigate = useNavigate();
+  const { prestamos, registrarDevolucion } = usePrestamos();
+  const [codigo, setCodigo] = useState(codigoRuta || '');
+  const [cargado, setCargado] = useState('');
   const [encontrado, setEncontrado] = useState(false);
-  const [accesorios, setAccesorios] = useState(ACCESORIOS_INICIALES);
-  const [estadoRetorno, setEstadoRetorno] = useState('Faltantes');
-  const [fechaRetorno, setFechaRetorno] = useState('2026-09-14');
-  const [descripcion, setDescripcion] = useState(
-    'Superficie activa con rayadura profunda en la esquina inferior derecha; el trazo se corta en esa zona.'
-  );
-  const [mantenimiento, setMantenimiento] = useState(true);
+  const [accesorios, setAccesorios] = useState([]);
+  const [estadoRetorno, setEstadoRetorno] = useState('Sin novedades');
+  const [fechaRetorno, setFechaRetorno] = useState(hoyISO());
+  const [descripcion, setDescripcion] = useState('');
+  const [mantenimiento, setMantenimiento] = useState(false);
+  const [foto, setFoto] = useState('');
   const [error, setError] = useState('');
   const [mensaje, setMensaje] = useState('');
-  const [mostrarRenovacion, setMostrarRenovacion] = useState(false);
-
-  const diasRetraso = calcularDiasRetraso(fechaRetorno, PRESTAMO_DEMO.fechaPactada);
-  const penalidad = diasRetraso * 15;
+  const prestamo = prestamos.find((p) => p.codigo === cargado);
+  let prestamoActual = {};
+  let diasRetraso = 0;
+  let penalidad = 0;
+  if (prestamo) {
+    prestamoActual = { ...prestamo, fechaPactada: prestamo.fin, fechaPactadaTexto: mostrarFecha(prestamo.fin) };
+    diasRetraso = Math.max(0, diasEntre(prestamo.fin, fechaRetorno) || 0);
+    penalidad = diasRetraso * prestamo.tarifa;
+  }
   const faltantes = accesorios.filter((a) => !a.devuelto);
 
-  function buscarPrestamo() {
-    setError('');
-    setMensaje('');
-
-    if (codigo.trim().toUpperCase() !== PRESTAMO_DEMO.codigo) {
-      setEncontrado(false);
-      setError('No encontramos un préstamo con ese código. Prueba con PRE-2026-0291.');
-      return;
-    }
-
+  function cargarPrestamo(valor) {
+    const actual = prestamos.find((p) => p.codigo === valor.trim().toUpperCase() && p.estado === 'Activo');
+    if (!actual) { setEncontrado(false); setError('No encontramos un préstamo activo con ese código. Selecciona uno desde «Préstamos vigentes».'); return; }
+    setCargado(actual.codigo);
+    setCodigo(actual.codigo);
+    setAccesorios(actual.accesorios.filter((a) => a.entregado).map((a) => ({ nombre: a.nombre, devuelto: true })));
     setEncontrado(true);
-  }
-
-  function marcarAccesorio(index) {
-    setAccesorios((actuales) =>
-      actuales.map((accesorio, i) =>
-        i === index ? { ...accesorio, devuelto: !accesorio.devuelto } : accesorio
-      )
-    );
-    setError('');
-  }
-
-  function cancelar() {
-    setEncontrado(false);
+    setEstadoRetorno('Sin novedades');
+    setFechaRetorno(hoyISO());
+    setDescripcion('');
+    setMantenimiento(false);
+    setFoto('');
     setError('');
     setMensaje('');
   }
+  useEffect(() => {
+    if (codigoRuta) cargarPrestamo(codigoRuta);
+    else { setEncontrado(false); setCodigo(''); }
+  }, [codigoRuta]);
 
-  function guardarDevolucion() {
+  function buscarPrestamo() { cargarPrestamo(codigo); }
+  function marcarAccesorio(index) {
+    setAccesorios((actuales) => actuales.map((accesorio, i) => {
+      if (i === index) return { ...accesorio, devuelto: !accesorio.devuelto };
+      return accesorio;
+    }));
     setError('');
-
-    if (estadoRetorno === 'Con daños' && descripcion.trim() === '') {
-      setError('Describe el daño antes de guardar la devolución.');
-      return;
-    }
-
-    if (estadoRetorno === 'Faltantes' && faltantes.length === 0) {
-      setError('Marca al menos un accesorio como faltante o selecciona «Sin novedades».');
-      return;
-    }
-
-    let texto = 'Devolución registrada correctamente.';
-
-    if (diasRetraso > 0) {
-      texto += ` ${diasRetraso} días de retraso. Penalidad: S/ ${penalidad.toFixed(2)}.`;
-    } else {
-      texto += ' Devolución a tiempo. Sin penalidad.';
-    }
-
-    if (faltantes.length > 0) {
-      texto += ` ${faltantes.length} accesorio(s) faltante(s) pendiente(s) de valorización.`;
-    }
-
-    if (mantenimiento) {
-      texto += ` La unidad ${PRESTAMO_DEMO.unidad} pasa a «En mantenimiento».`;
-    }
-
-    setMensaje(texto);
+  }
+  function cancelar() { navigate('/encargado/prestamos'); }
+  function guardarDevolucion() {
+    const resultado = registrarDevolucion(cargado, { fecha: fechaRetorno, estadoRetorno, accesorios, descripcion, mantenimiento, foto });
+    if (resultado.error) { setError(resultado.error); return; }
+    setError('');
+    setMensaje('Devolución registrada. ' + resultado.calculo.retraso + ' días de retraso. Penalidad: S/ ' + resultado.calculo.penalidad.toFixed(2) + '. El inventario y el historial fueron actualizados.');
     setEncontrado(false);
+  }
+
+  function claseAccesorio(devuelto) {
+    if (devuelto) return 'border-borde';
+    return 'border-red-300 bg-red-50';
   }
 
   function cambiarEstado(opcion) {
     setEstadoRetorno(opcion);
+    if (opcion === 'Con daños') setMantenimiento(true);
     setError('');
   }
 
@@ -134,9 +99,11 @@ export default function Devolucion() {
         </div>
       )}
 
+      <Link to="/encargado/prestamos" className="inline-block text-primario underline mb-4">← Préstamos vigentes</Link>
+      {!encontrado && <Link to="/encargado/historial" className="inline-block text-primario underline ml-4">Consultar historial</Link>}
       <div className="grid lg:grid-cols-2 gap-6">
         <section className="bg-white border border-borde rounded p-6">
-          <h2 className="text-xl font-semibold mb-1">Devolución con retraso y accesorio faltante</h2>
+          <h2 className="text-xl font-semibold mb-1">Devolución de equipo</h2>
           <p className="text-sm text-gris mb-5">Busca el préstamo para cargar sus datos.</p>
 
           <label className="block text-xs font-semibold uppercase mb-1">Buscar préstamo</label>
@@ -162,22 +129,22 @@ export default function Devolucion() {
               <div className="grid grid-cols-2 gap-3 bg-gray-50 border border-borde rounded p-4 text-sm mb-5">
                 <div>
                   <p className="text-xs uppercase text-gris">Estudiante</p>
-                  <p>{PRESTAMO_DEMO.estudiante}</p>
+                  <p>{prestamoActual.estudiante}</p>
                 </div>
                 <div>
                   <p className="text-xs uppercase text-gris">Equipo y unidad</p>
                   <p>
-                    {PRESTAMO_DEMO.equipo} ·{' '}
-                    <span className="font-mono">{PRESTAMO_DEMO.unidad}</span>
+                    {prestamoActual.equipo} ·{' '}
+                    <span className="font-mono">{prestamoActual.unidad}</span>
                   </p>
                 </div>
                 <div>
                   <p className="text-xs uppercase text-gris">Devolución pactada</p>
-                  <span className="font-mono">{PRESTAMO_DEMO.fechaPactadaTexto}</span>
+                  <span className="font-mono">{prestamoActual.fechaPactadaTexto}</span>
                 </div>
                 <div>
                   <p className="text-xs uppercase text-gris">Retorno real</p>
-                  <span className="font-mono">{formatearFecha(fechaRetorno)}</span>
+                  <span className="font-mono">{mostrarFecha(fechaRetorno)}</span>
                 </div>
               </div>
 
@@ -189,9 +156,7 @@ export default function Devolucion() {
                   key={accesorio.nombre}
                   className={
                     'flex items-center gap-2 border rounded px-3 py-2 mb-2 cursor-pointer ' +
-                    (accesorio.devuelto
-                      ? 'border-borde'
-                      : 'border-red-300 bg-red-50')
+                    claseAccesorio(accesorio.devuelto)
                   }
                 >
                   <input
@@ -234,26 +199,27 @@ export default function Devolucion() {
                 </div>
               </div>
 
-              {diasRetraso > 0 ? (
+              {diasRetraso > 0 && (
                 <div className="bg-red-50 border-l-4 border-peligro p-3 text-sm mt-5">
                   <b>{diasRetraso} días de retraso.</b> Penalidad calculada: S/{' '}
-                  {penalidad.toFixed(2)} (S/ 15.00 por día). La cuenta quedará bloqueada
+                  {penalidad.toFixed(2)} (S/ {Number(prestamoActual.tarifa || 0).toFixed(2)} por día). La cuenta quedará bloqueada
                   hasta regularizar.
                 </div>
-              ) : (
+              )}
+              {diasRetraso === 0 && (
                 <div className="bg-green-50 border-l-4 border-exito p-3 text-sm mt-5">
                   Devolución a tiempo · 0 días de retraso. Sin penalidad. La unidad{' '}
-                  <span className="font-mono">{PRESTAMO_DEMO.unidad}</span> vuelve al estado «Disponible».
+                  <span className="font-mono">{prestamoActual.unidad}</span> se actualizará al guardar la devolución.
                 </div>
               )}
 
               <div className="flex flex-wrap justify-end gap-2 mt-5">
                 <button
                   type="button"
-                  onClick={() => setMostrarRenovacion(true)}
+                  onClick={() => navigate('/encargado/prestamos')}
                   className="border border-primario text-primario px-4 py-2 rounded min-h-10"
                 >
-                  Renovar préstamo
+                  Ver préstamos y renovaciones
                 </button>
                 <button
                   type="button"
@@ -312,13 +278,16 @@ export default function Devolucion() {
               Fotografía del daño
             </label>
             <div className="border border-borde bg-gray-50 rounded h-32 flex items-center justify-center text-gris text-sm mb-4">
-              fotografía del daño
+              {foto && <img src={foto} alt="Fotografía del daño" className="w-full h-full object-contain" />}
+                {!foto && <span>Sin fotografía adjunta</span>}
             </div>
 
+            <SelectorFotos onAgregar={setFoto} onError={setError} />
             <label className="flex items-center gap-2 mb-4 text-sm">
               <input
                 type="checkbox"
                 checked={mantenimiento}
+                disabled={estadoRetorno === 'Con daños'}
                 onChange={(e) => setMantenimiento(e.target.checked)}
               />
               Derivar la unidad a mantenimiento
@@ -326,9 +295,8 @@ export default function Devolucion() {
 
             {mantenimiento && (
               <div className="bg-amber-50 border-l-4 border-acento p-3 text-sm mb-5">
-                La unidad <span className="font-mono">{PRESTAMO_DEMO.unidad}</span> pasará a
-                «En mantenimiento» y la disponibilidad del equipo bajará de 1 a 0 unidades libres.
-                Hay 1 reserva del 22/09/2026 que deberá reasignarse.
+                La unidad <span className="font-mono">{prestamoActual.unidad}</span> pasará a
+                «Mantenimiento» y no podrá volver a prestarse hasta su reparación.
               </div>
             )}
 
@@ -352,24 +320,7 @@ export default function Devolucion() {
         )}
       </div>
 
-      {mostrarRenovacion && (
-        <Renovacion
-          prestamo={PRESTAMO_DEMO.codigo}
-          equipo={PRESTAMO_DEMO.equipo}
-          unidad={PRESTAMO_DEMO.unidad}
-          fechaActual="21/09/2026"
-          fechaNueva="26/09/2026"
-          admiteRenovacion={true}
-          haySolicitudEnEspera={false}
-          onClose={() => setMostrarRenovacion(false)}
-          onConfirm={() => {
-            setMostrarRenovacion(false);
-            setMensaje(
-              `Renovación registrada para ${PRESTAMO_DEMO.codigo}. Nueva fecha de devolución: 26/09/2026.`
-            );
-          }}
-        />
-      )}
+
     </PanelEncargado>
   );
 }

@@ -5,6 +5,7 @@ import Etiqueta from '../../components/Etiqueta';
 import CampoInventario from '../../components/CampoInventario';
 import ModalInventario from '../../components/ModalInventario';
 import { useInventario } from '../../context/InventarioContext.jsx';
+import { usePrestamos } from '../../context/PrestamosContext';
 import { estadosPermitidos, validarUnidad, validarCondiciones } from './inventarioUtils';
 
 const campoClase = 'w-full border border-borde rounded px-3 py-2';
@@ -13,6 +14,7 @@ export default function DetalleEquipo() {
   const { id } = useParams();
   const location = useLocation();
   const { equipos, setEquipos, unidades, setUnidades } = useInventario();
+  const { solicitudes } = usePrestamos();
   const [duracion, setDuracion] = useState(7);
   const [autorizacion, setAutorizacion] = useState(true);
   const [renovacion, setRenovacion] = useState(false);
@@ -94,6 +96,11 @@ export default function DetalleEquipo() {
     textoRenovacion = 'No admite renovación.';
   }
 
+  let descripcionCodigo = 'codigo-unidad-ayuda';
+  if (erroresUnidad.codigo) {
+    descripcionCodigo += ' codigo-unidad-error';
+  }
+
   function abrirNuevaUnidad() {
     setNuevoCodigo('');
     setNuevaUbicacion('');
@@ -134,6 +141,8 @@ export default function DetalleEquipo() {
     evento.preventDefault();
     const actual = unidades.find((unidad) => unidad.equipoId === equipo.id && unidad.codigo === unidadSeleccionada.codigo);
     const encontrados = {};
+    const asignadas = solicitudes.filter((s) => s.estado === 'Aprobada' && s.unidad === unidadSeleccionada.codigo);
+    if (asignadas.length > 0) encontrados.estado = 'La unidad está asignada a una solicitud aprobada. Coordina su reasignación antes de cambiarla.';
     if (!actual || !estadosPermitidos(actual).includes(nuevoEstado)) {
       encontrados.estado = 'Selecciona una transición permitida.';
     }
@@ -225,7 +234,7 @@ export default function DetalleEquipo() {
           <h2 className="text-xl font-semibold">Este equipo aún no tiene unidades</h2>
           <p className="text-gris mt-2">Registra una unidad con su código de inventario para que aparezca en el catálogo.</p>
         </div>}
-        {unidadesEquipo.length > 0 && <div className="overflow-x-auto"><table className="w-full bg-white border border-borde text-sm">
+        {unidadesEquipo.length > 0 && <div className="overflow-x-auto"><div className="overflow-x-auto"><table className="w-full bg-white border border-borde text-sm">
           <thead className="bg-gray-50 text-xs uppercase text-gris text-left"><tr>{['Código', 'Ubicación', 'Estado', 'Observaciones', 'Préstamo vigente', 'Acciones'].map((titulo) => <th key={titulo} className="p-3">{titulo}</th>)}</tr></thead>
           <tbody>{unidadesEquipo.map((unidad) => <tr key={unidad.codigo} className="border-t border-borde">
             <td className="p-3 font-mono font-semibold">{unidad.codigo}</td>
@@ -243,7 +252,7 @@ export default function DetalleEquipo() {
               )}
             </td>
           </tr>)}</tbody>
-        </table></div>}
+        </table></div></div>}
       </>}
       {pestana === 'condiciones' && <div className="grid lg:grid-cols-2 gap-6">
         <form onSubmit={guardarCondiciones} noValidate className="bg-white border border-borde rounded p-6 space-y-4">
@@ -276,7 +285,11 @@ export default function DetalleEquipo() {
             />
           </CampoInventario>
           <div className="flex flex-wrap gap-3">
-            <button type="button" onClick={() => { cargarCondiciones(equipo); setMensaje('Se recuperaron las últimas condiciones guardadas.'); }} className="border border-primario text-primario px-4 py-2 rounded">Descartar</button>
+            <button
+              type="button"
+              onClick={() => { cargarCondiciones(equipo); setMensaje('Se recuperaron las últimas condiciones guardadas.'); }}
+              className="border border-primario text-primario px-4 py-2 rounded"
+            >Descartar</button>
             <button type="submit" className="bg-primario text-white px-4 py-2 rounded">Guardar condiciones</button>
           </div>
         </form>
@@ -303,9 +316,12 @@ export default function DetalleEquipo() {
               onChange={(e) => setNuevoCodigo(e.target.value)}
               placeholder="INV-OSC-0047"
               aria-invalid={Boolean(erroresUnidad.codigo)}
-              aria-describedby={erroresUnidad.codigo && 'codigo-unidad-error'}
+              aria-describedby={descripcionCodigo}
               className={`${campoClase} font-mono`}
             />
+            <p id="codigo-unidad-ayuda" className="text-xs text-gris mt-1">
+              Formato INV-XXX-0000. Usa tres letras y cuatro números. El código debe ser único en el inventario.
+            </p>
           </CampoInventario>
           <CampoInventario id="ubicacion" etiqueta="Ubicación" error={erroresUnidad.ubicacion}>
             <input

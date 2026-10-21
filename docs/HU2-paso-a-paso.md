@@ -1,8 +1,12 @@
 # HU-2: guía para entender tu avance
 
+> Para los cambios posteriores de integración con las otras historias, consulta [Integracion-frontend-paso-a-paso.md](Integracion-frontend-paso-a-paso.md). Las pantallas conservan su organización y ahora comparten solicitudes y préstamos.
+
 Lee primero [HU2-clases-y-complementos.md](HU2-clases-y-complementos.md): relaciona el código con tus PDFs y explica los complementos.
 
 Esta guía corresponde a la primera entrega: React y datos en el navegador. La segunda entrega necesita Express, base de datos y validaciones en el servidor.
+
+Consulta también [los ajustes del mockup y el estado de integración del grupo](HU2-ajustes-mockup.md).
 
 ## 1. Lo que ya habías construido
 
@@ -160,7 +164,7 @@ Esto conserva datos en ese navegador y ese origen web; todavía no es una base d
 
 La pestaña de condiciones depende de la dirección `/encargado/equipo/:id/condiciones`. Así funciona si la abres directamente o recargas. El historial usa `#historial` en la dirección.
 
-La ficha pública de HU-2 está en `/equipos/:id`. Las páginas de HU-3 conservan su implementación independiente. La integración del catálogo con este inventario corresponde coordinarla con su responsable. La autenticación pertenece a HU-1.
+La ficha pública de HU-2 está en `/equipos/:id`. El detalle de HU-3 reutiliza esa ficha con la prop `tipo="estudiante"`. Catálogo y solicitud consultan el mismo inventario. La navegación es demostrable con botones; según la aclaración de esta entrega, no se implementó autenticación real.
 
 `FotoEquipo` muestra una imagen o un mensaje si falta o falla. `ModalInventario` usa el elemento HTML `dialog`: el navegador controla el foco dentro del modal y permite cerrarlo con Escape. `useRef` conserva la referencia al elemento para abrirlo con `showModal()`.
 
@@ -170,7 +174,7 @@ La ficha pública de HU-2 está en `/equipos/:id`. Las páginas de HU-3 conserva
 | --- | --- |
 | Registrar y editar equipo | Campos obligatorios, marca/modelo únicos, descripción hasta 400 caracteres, accesorios y fotografías por enlaces |
 | Eliminar equipo | Confirmación y comprobación de préstamos/solicitudes asociados; elimina también sus unidades |
-| Registrar unidades | Código único en todo el inventario, ubicación obligatoria y observaciones opcionales |
+| Registrar unidades | Formato INV-XXX-0000, código único en todo el inventario, ubicación obligatoria y observaciones opcionales |
 | Estados | Transiciones manuales controladas, motivo obligatorio, confirmación de baja e historial con fecha |
 | Condiciones | Días enteros positivos, penalidad válida, autorización, renovación, vista previa y descarte |
 | Listado | Categoría, estado, disponibilidad, búsqueda por código/nombre/modelo, contadores y páginas de 8 |
@@ -184,9 +188,9 @@ La ficha pública de HU-2 está en `/equipos/:id`. Las páginas de HU-3 conserva
 - El DOCX pide interfaz responsiva y el PDF presenta solo escritorio. Agregamos adaptación básica para anchos pequeños; falta revisarla visualmente en navegador.
 - El documento enumera estados, pero no define una matriz exacta de transiciones. Implementamos esta propuesta: disponible → mantenimiento/baja; mantenimiento → disponible/baja; prestada requiere devolución; baja es definitiva. HU-4 y HU-5 deben gestionar entrega/devolución y respetar el contrato compartido.
 - Para no borrar referencias, bloqueamos la eliminación cuando los datos disponibles muestran solicitudes o préstamos asociados. Las solicitudes actuales identifican al equipo por nombre; al integrar el backend, conviene acordar un `equipoId` estable con el grupo.
-- Alcance acordado: trabajamos únicamente en HU-2 y en los archivos compartidos necesarios. HU-1, HU-3, HU-4 y HU-5 conservan sus archivos originales; su integración corresponde coordinarla con sus responsables.
-- `datos.js` contiene solo seis unidades reales. Los totales anteriores de los modelos eran números fijos que no coincidían con ellas. Ahora algunos modelos muestran cero unidades en el inventario y la ficha pública de HU-2. El catálogo de HU-3 conserva sus datos actuales hasta que su responsable integre el inventario. No inventamos unidades para completar esos contadores.
-- La protección de rutas por rol sigue siendo responsabilidad de HU-1. Un diseño de panel no sustituye la autenticación.
+- Alcance actualizado por autorización del usuario: se corrigió la compilación y navegación de HU-3 y su consulta al inventario de HU-2. Con la autorización posterior para cerrar el frontend, HU-1, HU-4 y HU-5 también quedaron integradas. Se conservaron sus pantallas y se completaron las operaciones compartidas de solicitudes y préstamos.
+- `datos.js` contiene solo seis unidades reales. Los totales anteriores de los modelos eran números fijos que no coincidían con ellas. Ahora algunos modelos muestran cero unidades en el inventario y la ficha pública de HU-2. El catálogo ahora consulta el mismo inventario y muestra los modelos que tengan al menos una unidad activa. No inventamos unidades para completar esos contadores.
+- Según la aclaración del profesor aportada por el usuario, en esta entrega se muestran los menús de cada rol y la navegación mediante botones; no se exigió implementar acceso real. Se dejó un enlace «Vista del encargado» para la demostración.
 
 ## 10. Primera práctica: seguir una unidad de principio a fin
 

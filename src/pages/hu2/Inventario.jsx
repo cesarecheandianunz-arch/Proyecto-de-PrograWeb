@@ -1,22 +1,36 @@
-import { useState } from 'react';
-import { Link, useLocation } from 'react-router-dom';
+import { useState, useEffect } from 'react';
+import { Link, useLocation, useSearchParams } from 'react-router-dom';
 import PanelEncargado from '../../components/PanelEncargado';
 import ModalInventario from '../../components/ModalInventario';
 import FotoEquipo from '../../components/FotoEquipo';
-import { categorias, solicitudes, prestamos } from '../../datos';
+import { categorias, equipos as equiposIniciales } from '../../datos';
+import { usePrestamos } from '../../context/PrestamosContext';
 import { useInventario } from '../../context/InventarioContext.jsx';
 import { estadosUnidad, impedimentoEliminar } from './inventarioUtils';
 
 export default function Inventario() {
+  const { solicitudes, prestamos } = usePrestamos();
   const { equipos, setEquipos, unidades, setUnidades, equiposConConteo } = useInventario();
   const location = useLocation();
+  const [parametros, setParametros] = useSearchParams();
   const [categoria, setCategoria] = useState('');
-  const [codigo, setCodigo] = useState('');
+  const codigo = parametros.get('codigo') || '';
   const [estado, setEstado] = useState('');
   const [disponibilidad, setDisponibilidad] = useState('');
   const [pagina, setPagina] = useState(1);
   const [porEliminar, setPorEliminar] = useState(null);
   const [mensaje, setMensaje] = useState(location.state?.mensaje || '');
+
+  // Una búsqueda del encabezado empieza sin los filtros de la búsqueda anterior.
+  useEffect(() => {
+    if (location.state && location.state.busquedaInventario) {
+      setCategoria('');
+      setEstado('');
+      setDisponibilidad('');
+      setPagina(1);
+      setMensaje('');
+    }
+  }, [location]);
 
   // Aplicamos un filtro a la vez para poder seguir cada paso.
   let lista = equiposConConteo;
@@ -57,17 +71,26 @@ export default function Inventario() {
   const inicio = (paginaActual - 1) * 8;
   const visibles = lista.slice(inicio, inicio + 8);
 
+  function cambiarCodigo(valor) {
+    if (valor === '') {
+      setParametros({}, { replace: true });
+    } else {
+      setParametros({ codigo: valor }, { replace: true });
+    }
+    setPagina(1);
+  }
+
   function limpiarFiltros() {
     setCategoria('');
     setEstado('');
-    setCodigo('');
+    setParametros({}, { replace: true });
     setDisponibilidad('');
     setPagina(1);
   }
 
   let bloqueoEliminacion = '';
   if (porEliminar) {
-    bloqueoEliminacion = impedimentoEliminar(porEliminar, unidades, solicitudes, prestamos);
+    bloqueoEliminacion = impedimentoEliminar(porEliminar, unidades, solicitudes, prestamos, equiposIniciales);
   }
 
   let primerResultado = 0;
@@ -83,7 +106,7 @@ export default function Inventario() {
   }
 
   function eliminarEquipo() {
-    const impedimento = impedimentoEliminar(porEliminar, unidades, solicitudes, prestamos);
+    const impedimento = impedimentoEliminar(porEliminar, unidades, solicitudes, prestamos, equiposIniciales);
     if (impedimento) {
       setMensaje(impedimento);
       setPorEliminar(null);
@@ -137,16 +160,16 @@ export default function Inventario() {
         <input
           aria-label="Buscar equipo o código"
           value={codigo}
-          onChange={(e) => { setCodigo(e.target.value); setPagina(1); }}
+          onChange={(e) => cambiarCodigo(e.target.value)}
           placeholder="Código, nombre o modelo"
           className="min-w-0 flex-1 border border-borde rounded px-3 py-2 bg-white"
         />
         <button onClick={limpiarFiltros} className="border border-borde rounded px-4 py-2 bg-white">Limpiar filtros</button>
       </div>
       <p className="text-sm text-gris mb-3">Mostrando {primerResultado} a {Math.min(inicio + 8, lista.length)} de {lista.length} coincidencias</p>
-      <div className="overflow-x-auto">
+      <div className="max-h-[65vh] overflow-auto">
         <table className="w-full bg-white border border-borde text-sm">
-          <thead className="bg-gray-50 text-xs uppercase text-gris text-left">
+          <thead className="sticky top-0 z-10 bg-gray-50 text-xs uppercase text-gris text-left">
             <tr>{['Foto', 'Equipo', 'Marca y modelo', 'Categoría', 'Unidades por estado', 'Acciones'].map((titulo) => <th key={titulo} className="p-3">{titulo}</th>)}</tr>
           </thead>
           <tbody>
@@ -156,7 +179,15 @@ export default function Inventario() {
                 <td className="p-3 font-medium">{equipo.nombre}</td>
                 <td className="p-3 text-gris">{equipo.marca} · {equipo.modelo}</td>
                 <td className="p-3 text-gris">{equipo.categoria}</td>
-                <td className="p-3 font-mono">{equipo.libres} libres · {equipo.prestadas} prestadas · {equipo.mantenimiento} mant. · {equipo.baja} de baja</td>
+                <td className="p-3 font-mono">
+                  <span className="text-exito">{equipo.libres} libres</span>
+                  {' · '}
+                  <span className="text-info">{equipo.prestadas} prestadas</span>
+                  {' · '}
+                  <span className="text-alerta">{equipo.mantenimiento} mant.</span>
+                  {' · '}
+                  <span className="text-gris">{equipo.baja} de baja</span>
+                </td>
                 <td className="p-3"><div className="flex flex-wrap gap-3 text-primario">
                   <Link to={`/encargado/equipo/${equipo.id}`}>Unidades</Link>
                   <Link to={`/encargado/equipo/${equipo.id}/condiciones`}>Condiciones</Link>
@@ -171,9 +202,17 @@ export default function Inventario() {
         </table>
       </div>
       {paginas > 1 && <nav aria-label="Paginación del inventario" className="flex items-center justify-end gap-3 mt-4">
-        <button disabled={paginaActual === 1} onClick={() => setPagina(paginaActual - 1)} className="border border-borde px-3 py-2 rounded disabled:opacity-40">Anterior</button>
+        <button
+          disabled={paginaActual === 1}
+          onClick={() => setPagina(paginaActual - 1)}
+          className="border border-borde px-3 py-2 rounded disabled:opacity-40"
+        >Anterior</button>
         <span>Página {paginaActual} de {paginas}</span>
-        <button disabled={paginaActual === paginas} onClick={() => setPagina(paginaActual + 1)} className="border border-borde px-3 py-2 rounded disabled:opacity-40">Siguiente</button>
+        <button
+          disabled={paginaActual === paginas}
+          onClick={() => setPagina(paginaActual + 1)}
+          className="border border-borde px-3 py-2 rounded disabled:opacity-40"
+        >Siguiente</button>
       </nav>}
       {porEliminar && <ModalInventario titulo="Eliminar equipo" onCerrar={() => setPorEliminar(null)}>
         {bloqueoEliminacion !== '' && <p role="alert">{bloqueoEliminacion}</p>}

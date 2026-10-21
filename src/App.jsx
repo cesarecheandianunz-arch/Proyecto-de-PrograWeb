@@ -8,6 +8,7 @@ import RegistroEncargado from './pages/hu1/RegistroEncargado';
 import Recuperar from './pages/hu1/Recuperar';
 import MiCuenta from './pages/hu1/MiCuenta';
 import Error from './pages/hu1/Error';
+import Informacion from './pages/hu1/Informacion';
 // HU-2 Inventario
 import Inventario from './pages/hu2/Inventario';
 import NuevoEquipo from './pages/hu2/NuevoEquipo';
@@ -18,6 +19,7 @@ import Catalogo from './pages/hu3/Catalogo';
 import DetalleCatalogo from './pages/hu3/DetalleCatalogo';
 import Solicitar from './pages/hu3/Solicitar';
 import MisSolicitudes from './pages/hu3/MisSolicitudes';
+import DetalleSolicitud from './pages/hu3/DetalleSolicitud';
 // HU-4 Aprobación y entrega
 import Bandeja from './pages/hu4/Bandeja';
 import RegistrarEntrega from './pages/hu4/RegistrarEntrega';
@@ -37,12 +39,17 @@ export default function App() {
       <Route path="/recuperar" element={<Recuperar />} />
       <Route path="/mi-cuenta" element={<MiCuenta />} />
       <Route path="/acceso-denegado" element={<Error codigo={403} />} />
+      <Route path="/ayuda" element={<Informacion />} />
+      <Route path="/reglamento" element={<Informacion reglamento />} />
+      <Route path="/encargado/ayuda" element={<Informacion manual />} />
 
       <Route path="/catalogo" element={<Catalogo />} />
       <Route path="/equipos/:id" element={<FichaPublicaEquipo />} />
       <Route path="/catalogo/:id" element={<DetalleCatalogo />} />
       <Route path="/catalogo/:id/solicitar" element={<Solicitar />} />
       <Route path="/mis-solicitudes" element={<MisSolicitudes />} />
+      <Route path="/mis-solicitudes/:codigo" element={<DetalleSolicitud />} />
+      <Route path="/mis-solicitudes/:codigo/constancia" element={<Constancia tipo="estudiante" />} />
 
       <Route path="/encargado/inventario" element={<Inventario />} />
       <Route path="/encargado/nuevo-equipo" element={<NuevoEquipo />} />
@@ -51,10 +58,14 @@ export default function App() {
       <Route path="/encargado/equipo/:id/editar" element={<NuevoEquipo />} />
       <Route path="/encargado/solicitudes" element={<Bandeja />} />
       <Route path="/encargado/entrega" element={<RegistrarEntrega />} />
+      <Route path="/encargado/entrega/:codigo" element={<RegistrarEntrega />} />
       <Route path="/encargado/constancia" element={<Constancia />} />
+      <Route path="/encargado/constancia/:codigo" element={<Constancia />} />
       <Route path="/encargado/prestamos" element={<Prestamos />} />
       <Route path="/encargado/devolucion" element={<Devolucion />} />
+      <Route path="/encargado/devolucion/:codigo" element={<Devolucion />} />
       <Route path="/encargado/historial" element={<Historial />} />
+      <Route path="/encargado/historial/:estudianteId" element={<Historial />} />
 
       <Route path="*" element={<Error codigo={404} />} />
     </Routes>

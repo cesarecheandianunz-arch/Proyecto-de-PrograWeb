@@ -6,10 +6,16 @@ export default function Renovacion({
   fechaNueva,
   admiteRenovacion,
   haySolicitudEnEspera,
+  motivoBloqueo = '',
   onClose,
   onConfirm,
 }) {
-  const bloqueada = !admiteRenovacion || haySolicitudEnEspera;
+  const bloqueada = !admiteRenovacion || haySolicitudEnEspera || motivoBloqueo !== '';
+  let explicacion = motivoBloqueo;
+  if (!explicacion) {
+    if (!admiteRenovacion) explicacion = 'Este equipo no admite renovación.';
+    else explicacion = 'Existe una solicitud en espera para este equipo.';
+  }
 
   return (
     <div className="fixed inset-0 bg-black/40 flex items-center justify-center p-4 z-50">
@@ -36,14 +42,13 @@ export default function Renovacion({
           <p><span className="text-gris">Vencimiento actual:</span> {fechaActual}</p>
         </div>
 
-        {bloqueada ? (
+        {bloqueada && (
           <div className="bg-red-50 border-l-4 border-peligro p-4 text-sm mb-5">
             <b>No es posible renovar.</b>{' '}
-            {!admiteRenovacion
-              ? 'Este equipo no admite renovación.'
-              : 'Existe una solicitud en espera para este equipo. La renovación queda bloqueada.'}
+            {explicacion}
           </div>
-        ) : (
+        )}
+        {!bloqueada && (
           <div className="bg-green-50 border-l-4 border-exito p-4 text-sm mb-5">
             El equipo admite renovación y no existen solicitudes en espera.
             <br />

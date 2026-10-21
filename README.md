@@ -2,6 +2,8 @@
 
 Programación Web · Universidad de Lima · 2026-2. Interfaz en React + Tailwind (solo front, sin backend).
 
+Verificado con Node.js 24.21.
+
 ## Cómo correrlo
 
 ```bash
@@ -10,6 +12,29 @@ npm run dev
 ```
 
 Abre la URL que aparece en la terminal (normalmente http://localhost:5173).
+
+## Demostración del frontend
+
+En Inicio están los enlaces «Vista del estudiante» y «Vista del encargado».
+Permiten revisar HU-1 a HU-5 sin cambiar direcciones manualmente.
+El acceso por correo es una simulación de rol; no hay autenticación real ni envío de correos.
+No se guardan contraseñas.
+
+Solicitudes, aprobaciones, entregas, devoluciones, renovaciones y pagos comparten
+los mismos datos y se conservan en el navegador. La entrega requiere una solicitud
+aprobada y una fecha dentro del rango solicitado que no sea futura.
+
+```bash
+npm test
+npm run build
+```
+
+Las pruebas cubren las reglas de HU-2 y el recorrido integrado de préstamos.
+La explicación por historia, los complementos y la demostración están en
+[Integracion-frontend-paso-a-paso.md](docs/Integracion-frontend-paso-a-paso.md).
+
+Para imágenes se admiten enlaces HTTP/HTTPS o selección de JPG/PNG, hasta tres
+fotografías por equipo y 600 KB por archivo. No se necesitan servicios externos.
 
 ## Dónde está cada historia
 

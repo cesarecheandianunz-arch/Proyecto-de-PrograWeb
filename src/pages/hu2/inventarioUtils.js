@@ -38,6 +38,34 @@ export function estadosPermitidos(unidad) {
   }
 }
 
+export function codigoInventarioValido(codigo) {
+  // Ejemplo: INV-OSC-0047 se separa en ['INV', 'OSC', '0047'].
+  const partes = codigo.trim().toUpperCase().split('-');
+
+  if (partes.length !== 3) {
+    return false;
+  }
+  if (partes[0] !== 'INV' || partes[1].length !== 3 || partes[2].length !== 4) {
+    return false;
+  }
+
+  const letras = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+  for (const letra of partes[1]) {
+    if (!letras.includes(letra)) {
+      return false;
+    }
+  }
+
+  const numeros = '0123456789';
+  for (const digito of partes[2]) {
+    if (!numeros.includes(digito)) {
+      return false;
+    }
+  }
+
+  return true;
+}
+
 export function validarUnidad(codigo, ubicacion, unidades) {
   const errores = {};
   const repetidas = unidades.filter((unidad) => {
@@ -46,6 +74,8 @@ export function validarUnidad(codigo, ubicacion, unidades) {
 
   if (codigo.trim() === '') {
     errores.codigo = 'Ingresa el código de inventario.';
+  } else if (!codigoInventarioValido(codigo)) {
+    errores.codigo = 'Usa el formato INV-XXX-0000: tres letras y cuatro números. Ejemplo: INV-OSC-0047.';
   } else if (repetidas.length > 0) {
     errores.codigo = 'Este código ya está registrado en el inventario.';
   }
@@ -73,6 +103,10 @@ export function validarCondiciones(duracion, penalidad) {
 }
 
 export function fotoValida(url) {
+  // Las imágenes seleccionadas con FileReader se guardan como texto de imagen.
+  if (url.startsWith('data:image/png;base64,') || url.startsWith('data:image/jpeg;base64,')) {
+    return url.length <= 800050;
+  }
   // Extra: URL interpreta la dirección; si no tiene formato válido, entra al catch.
   try {
     const direccion = new URL(url);
@@ -86,7 +120,7 @@ export function fotoValida(url) {
   }
 }
 
-export function impedimentoEliminar(equipo, unidades, solicitudes, prestamos) {
+export function impedimentoEliminar(equipo, unidades, solicitudes, prestamos, equiposIniciales = []) {
   const propias = unidades.filter((unidad) => unidad.equipoId === equipo.id);
 
   for (const unidad of propias) {
@@ -96,8 +130,25 @@ export function impedimentoEliminar(equipo, unidades, solicitudes, prestamos) {
     }
   }
 
-  // Consultamos las otras historias, conservando sus datos sin cambios.
-  const solicitudesEquipo = solicitudes.filter((solicitud) => solicitud.equipo === equipo.nombre);
+  // El ID identifica al equipo aunque su nombre cambie.
+  // Los datos antiguos solo guardaban el nombre: consultamos también su nombre inicial.
+  const equipoInicial = equiposIniciales.find((inicial) => inicial.id === equipo.id);
+  const solicitudesEquipo = solicitudes.filter((solicitud) => {
+    if (solicitud.equipoId !== undefined && solicitud.equipoId !== null) {
+      return Number(solicitud.equipoId) === equipo.id;
+    }
+    if (solicitud.equipo === equipo.nombre) {
+      return true;
+    }
+    if (equipoInicial && solicitud.equipo === equipoInicial.nombre) {
+      return true;
+    }
+    return false;
+  });
+
+  const prestamosEquipo = prestamos.filter((prestamo) => {
+    return Number(prestamo.equipoId) === equipo.id;
+  });
   let tieneHistorial = false;
   for (const unidad of propias) {
     const prestamosUnidad = prestamos.filter((prestamo) => prestamo.unidad === unidad.codigo);
@@ -106,7 +157,7 @@ export function impedimentoEliminar(equipo, unidades, solicitudes, prestamos) {
     }
   }
 
-  if (solicitudesEquipo.length > 0 || tieneHistorial) {
+  if (solicitudesEquipo.length > 0 || prestamosEquipo.length > 0 || tieneHistorial) {
     return 'No se puede eliminar: este equipo tiene solicitudes o préstamos asociados. Conserva su historial dando de baja las unidades cuando corresponda.';
   }
   return '';
@@ -137,7 +188,8 @@ export function validarEquipo(datos, equipos, id) {
 
   const fotosInvalidas = datos.fotografias.filter((url) => fotoValida(url) === false);
   if (fotosInvalidas.length > 0) {
-    errores.fotografias = 'Cada fotografía debe tener una dirección http:// o https:// válida.';
+    errores.fotografias = 'Selecciona imágenes JPG/PNG o usa direcciones http:// o https:// válidas.';
   }
+  if (datos.fotografias.length > 3) errores.fotografias = 'Conserva como máximo tres fotografías por equipo.';
   return errores;
 }

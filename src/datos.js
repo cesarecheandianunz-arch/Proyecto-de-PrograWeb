@@ -7,14 +7,14 @@ export const carreras = ['Ingeniería Electrónica', 'Ingeniería Industrial', '
 export const cursos = ['IN324 Laboratorio de Circuitos', 'IN401 Proyecto Integrador', 'IN352 Redes y Comunicaciones', 'CO210 Fotografía Documental'];
 
 export const equipos = [
-  { id: 1, nombre: 'Osciloscopio TBS1052B', marca: 'Tektronix', modelo: 'TBS1052B', categoria: 'Medición', libres: 3, total: 5, duracion: 7 },
-  { id: 2, nombre: 'Cámara Canon EOS 90D', marca: 'Canon', modelo: 'EOS 90D', categoria: 'Audiovisual', libres: 2, total: 4, duracion: 5 },
-  { id: 3, nombre: 'Kit de robótica Arduino Mega', marca: 'Arduino', modelo: 'Mega 2560', categoria: 'Robótica', libres: 6, total: 6, duracion: 10 },
-  { id: 4, nombre: 'Tableta gráfica Wacom Intuos', marca: 'Wacom', modelo: 'CTL-4100', categoria: 'Cómputo', libres: 1, total: 3, duracion: 5 },
-  { id: 5, nombre: 'Multímetro Fluke 117', marca: 'Fluke', modelo: '117', categoria: 'Medición', libres: 0, total: 3, duracion: 5 },
-  { id: 6, nombre: 'Analizador de redes portátil', marca: 'NetAlly', modelo: 'LinkRunner', categoria: 'Redes', libres: 2, total: 3, duracion: 7 },
-  { id: 7, nombre: 'Trípode Manfrotto MT055', marca: 'Manfrotto', modelo: 'MT055', categoria: 'Audiovisual', libres: 4, total: 5, duracion: 7 },
-  { id: 8, nombre: 'Fuente de poder regulable', marca: 'Korad', modelo: 'KA3005P', categoria: 'Laboratorio de física', libres: 3, total: 4, duracion: 15 },
+  { id: 1, descripcion: 'Equipo para prácticas y proyectos académicos. Recojo y devolución en Almacén H-102.', fotografias: [], accesorios: ['2 sondas de medición', 'Cable USB', 'Estuche rígido'], autorizacion: true, renovacion: false, penalidad: 15, nombre: 'Osciloscopio TBS1052B', marca: 'Tektronix', modelo: 'TBS1052B', categoria: 'Medición', libres: 3, total: 5, duracion: 7 },
+  { id: 2, descripcion: 'Equipo para prácticas y proyectos académicos. Recojo y devolución en Almacén H-102.', fotografias: [], accesorios: ['Estuche rígido', 'Cargador', 'Batería de repuesto', 'Correa', 'Cable USB'], autorizacion: false, renovacion: true, penalidad: 20, nombre: 'Cámara Canon EOS 90D', marca: 'Canon', modelo: 'EOS 90D', categoria: 'Audiovisual', libres: 2, total: 4, duracion: 5 },
+  { id: 3, descripcion: 'Equipo para prácticas y proyectos académicos. Recojo y devolución en Almacén H-102.', fotografias: [], accesorios: ['Estuche rígido', 'Cable USB'], autorizacion: true, renovacion: false, penalidad: 15, nombre: 'Kit de robótica Arduino Mega', marca: 'Arduino', modelo: 'Mega 2560', categoria: 'Robótica', libres: 6, total: 6, duracion: 10 },
+  { id: 4, descripcion: 'Equipo para prácticas y proyectos académicos. Recojo y devolución en Almacén H-102.', fotografias: [], accesorios: ['Lápiz digital', 'Cable USB', 'Estuche'], autorizacion: true, renovacion: false, penalidad: 15, nombre: 'Tableta gráfica Wacom Intuos', marca: 'Wacom', modelo: 'CTL-4100', categoria: 'Cómputo', libres: 1, total: 3, duracion: 5 },
+  { id: 5, descripcion: 'Equipo para prácticas y proyectos académicos. Recojo y devolución en Almacén H-102.', fotografias: [], accesorios: ['Estuche rígido', 'Cable USB'], autorizacion: true, renovacion: false, penalidad: 15, nombre: 'Multímetro Fluke 117', marca: 'Fluke', modelo: '117', categoria: 'Medición', libres: 0, total: 3, duracion: 5 },
+  { id: 6, descripcion: 'Equipo para prácticas y proyectos académicos. Recojo y devolución en Almacén H-102.', fotografias: [], accesorios: ['Estuche rígido', 'Cable USB'], autorizacion: true, renovacion: false, penalidad: 15, nombre: 'Analizador de redes portátil', marca: 'NetAlly', modelo: 'LinkRunner', categoria: 'Redes', libres: 2, total: 3, duracion: 7 },
+  { id: 7, descripcion: 'Equipo para prácticas y proyectos académicos. Recojo y devolución en Almacén H-102.', fotografias: [], accesorios: ['Estuche rígido', 'Cable USB'], autorizacion: true, renovacion: true, penalidad: 15, nombre: 'Trípode Manfrotto MT055', marca: 'Manfrotto', modelo: 'MT055', categoria: 'Audiovisual', libres: 4, total: 5, duracion: 7 },
+  { id: 8, descripcion: 'Equipo para prácticas y proyectos académicos. Recojo y devolución en Almacén H-102.', fotografias: [], accesorios: ['Estuche rígido', 'Cable USB'], autorizacion: true, renovacion: true, penalidad: 15, nombre: 'Fuente de poder regulable', marca: 'Korad', modelo: 'KA3005P', categoria: 'Laboratorio de física', libres: 3, total: 4, duracion: 15 },
 ];
 
 export const unidades = [
@@ -24,6 +24,33 @@ export const unidades = [
   { codigo: 'INV-OSC-0045', equipoId:1,ubicacion: 'Servicio técnico externo', estado: 'Mantenimiento', observacion: 'Sonda 2 con falso contacto', prestamo: '—' },
   { codigo: 'INV-OSC-0046', equipoId:1,ubicacion: 'Almacén N-005', estado: 'Disponible', observacion: '—', prestamo: '—' },
   {codigo: 'INV-CAM-0009', equipoId:2,ubicacion: 'Almacén H-102 · anaquel 1', estado: 'Prestada', observacion: 'Entregada con estuche y cargador', prestamo: 'PRE-2026-0319' },
+  { codigo: 'INV-CAM-0010', equipoId: 2, ubicacion: 'Almacén H-102', estado: 'Disponible', observacion: '—', prestamo: '—' },
+  { codigo: 'INV-CAM-0011', equipoId: 2, ubicacion: 'Almacén H-102', estado: 'Disponible', observacion: '—', prestamo: '—' },
+  { codigo: 'INV-CAM-0012', equipoId: 2, ubicacion: 'Almacén H-102', estado: 'Prestada', observacion: '—', prestamo: 'PRE-2026-0303' },
+  { codigo: 'INV-ARD-0013', equipoId: 3, ubicacion: 'Almacén H-102', estado: 'Disponible', observacion: '—', prestamo: '—' },
+  { codigo: 'INV-ARD-0014', equipoId: 3, ubicacion: 'Almacén H-102', estado: 'Disponible', observacion: '—', prestamo: '—' },
+  { codigo: 'INV-ARD-0015', equipoId: 3, ubicacion: 'Almacén H-102', estado: 'Disponible', observacion: '—', prestamo: '—' },
+  { codigo: 'INV-ARD-0016', equipoId: 3, ubicacion: 'Almacén H-102', estado: 'Disponible', observacion: '—', prestamo: '—' },
+  { codigo: 'INV-ARD-0017', equipoId: 3, ubicacion: 'Almacén H-102', estado: 'Disponible', observacion: '—', prestamo: '—' },
+  { codigo: 'INV-ARD-0018', equipoId: 3, ubicacion: 'Almacén H-102', estado: 'Disponible', observacion: '—', prestamo: '—' },
+  { codigo: 'INV-TAB-0004', equipoId: 4, ubicacion: 'Almacén H-102', estado: 'Prestada', observacion: '—', prestamo: 'PRE-2026-0291' },
+  { codigo: 'INV-TAB-0005', equipoId: 4, ubicacion: 'Almacén H-102', estado: 'Disponible', observacion: '—', prestamo: '—' },
+  { codigo: 'INV-TAB-0006', equipoId: 4, ubicacion: 'Almacén H-102', estado: 'Disponible', observacion: '—', prestamo: '—' },
+  { codigo: 'INV-MUL-0021', equipoId: 5, ubicacion: 'Almacén H-102', estado: 'Prestada', observacion: '—', prestamo: 'PRE-2026-0311' },
+  { codigo: 'INV-MUL-0022', equipoId: 5, ubicacion: 'Almacén H-102', estado: 'Mantenimiento', observacion: '—', prestamo: '—' },
+  { codigo: 'INV-MUL-0023', equipoId: 5, ubicacion: 'Almacén H-102', estado: 'Disponible', observacion: '—', prestamo: '—' },
+  { codigo: 'INV-RED-0001', equipoId: 6, ubicacion: 'Almacén H-102', estado: 'Disponible', observacion: '—', prestamo: '—' },
+  { codigo: 'INV-RED-0002', equipoId: 6, ubicacion: 'Almacén H-102', estado: 'Disponible', observacion: '—', prestamo: '—' },
+  { codigo: 'INV-RED-0003', equipoId: 6, ubicacion: 'Almacén H-102', estado: 'Dada de baja', observacion: '—', prestamo: '—' },
+  { codigo: 'INV-TRI-0007', equipoId: 7, ubicacion: 'Almacén H-102', estado: 'Prestada', observacion: '—', prestamo: 'PRE-2026-0320' },
+  { codigo: 'INV-TRI-0008', equipoId: 7, ubicacion: 'Almacén H-102', estado: 'Disponible', observacion: '—', prestamo: '—' },
+  { codigo: 'INV-TRI-0009', equipoId: 7, ubicacion: 'Almacén H-102', estado: 'Disponible', observacion: '—', prestamo: '—' },
+  { codigo: 'INV-TRI-0010', equipoId: 7, ubicacion: 'Almacén H-102', estado: 'Disponible', observacion: '—', prestamo: '—' },
+  { codigo: 'INV-TRI-0011', equipoId: 7, ubicacion: 'Almacén H-102', estado: 'Disponible', observacion: '—', prestamo: '—' },
+  { codigo: 'INV-FUE-0001', equipoId: 8, ubicacion: 'Almacén H-102', estado: 'Disponible', observacion: '—', prestamo: '—' },
+  { codigo: 'INV-FUE-0002', equipoId: 8, ubicacion: 'Almacén H-102', estado: 'Disponible', observacion: '—', prestamo: '—' },
+  { codigo: 'INV-FUE-0003', equipoId: 8, ubicacion: 'Almacén H-102', estado: 'Disponible', observacion: '—', prestamo: '—' },
+  { codigo: 'INV-FUE-0004', equipoId: 8, ubicacion: 'Almacén H-102', estado: 'Mantenimiento', observacion: '—', prestamo: '—' },
 ];
 
 export const solicitudes = [

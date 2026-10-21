@@ -1,6 +1,8 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import Pagina from '../../components/Pagina';
+import { validarRegistro } from '../../utils/cuenta';
+import { leerObjeto } from '../../utils/almacenamiento';
 
 export default function RegistroEncargado() {
   const [nombres, setNombres] = useState('');
@@ -10,6 +12,21 @@ export default function RegistroEncargado() {
   const [almacen, setAlmacen] = useState('Almacén H-102');
   const [anexo, setAnexo] = useState('');
   const [enviado, setEnviado] = useState(false);
+  const [confirmar, setConfirmar] = useState('');
+  const [errores, setErrores] = useState({});
+  function registrar() {
+    const encontrados = validarRegistro({ nombres, apellidos, correo, password, confirmar, almacen }, 'encargado');
+    setErrores(encontrados);
+    setEnviado(false);
+    if (Object.keys(encontrados).length > 0) return;
+    try {
+      const anteriores = leerObjeto('encargados-demo', { lista: [] });
+      if (anteriores.lista.filter((e) => e.correo === correo.trim().toLowerCase()).length > 0) { setErrores({ correo: 'Este correo ya fue registrado.' }); return; }
+      const nuevo = { nombres: nombres.trim(), apellidos: apellidos.trim(), correo: correo.trim().toLowerCase(), almacen, anexo, estado: 'Pendiente de aprobación' };
+      localStorage.setItem('encargados-demo', JSON.stringify({ lista: [...anteriores.lista, nuevo] }));
+      setEnviado(true);
+    } catch { setErrores({ general: 'No se pudo guardar el registro en este navegador.' }); }
+  }
 
   return (
     <Pagina tipo="publico">
@@ -23,6 +40,7 @@ export default function RegistroEncargado() {
           </p>
         )}
 
+        {errores.general && <p role="alert" className="text-peligro">{errores.general}</p>}
         <div className="grid grid-cols-2 gap-4">
           <div>
             <label className="block text-xs font-semibold uppercase mb-1">Nombres</label>
@@ -34,11 +52,21 @@ export default function RegistroEncargado() {
           </div>
           <div>
             <label className="block text-xs font-semibold uppercase mb-1">Correo institucional</label>
-            <input value={correo} onChange={(e) => setCorreo(e.target.value)} placeholder="nombre@ulima.edu.pe" className="w-full border border-borde rounded px-3 py-2" />
+            <input
+              value={correo}
+              onChange={(e) => setCorreo(e.target.value)}
+              placeholder="nombre@ulima.edu.pe"
+              className="w-full border border-borde rounded px-3 py-2"
+            />
           </div>
           <div>
             <label className="block text-xs font-semibold uppercase mb-1">Contraseña</label>
             <input type="password" value={password} onChange={(e) => setPassword(e.target.value)} className="w-full border border-borde rounded px-3 py-2" />
+          </div>
+          <div>
+            <label className="block text-xs font-semibold uppercase mb-1">Confirmar contraseña</label>
+            <input type="password" value={confirmar} onChange={(e) => setConfirmar(e.target.value)} className="w-full border border-borde rounded px-3 py-2" />
+            {errores.confirmar && <p role="alert" className="text-peligro text-sm">{errores.confirmar}</p>}
           </div>
           <div>
             <label className="block text-xs font-semibold uppercase mb-1">Almacén asignado</label>
@@ -47,6 +75,7 @@ export default function RegistroEncargado() {
               <option>Almacén N-005</option>
               <option>Laboratorio de Electrónica H-210</option>
             </select>
+            {errores.almacen && <p role="alert" className="text-peligro text-sm">{errores.almacen}</p>}
           </div>
           <div>
             <label className="block text-xs font-semibold uppercase mb-1">Anexo telefónico</label>
@@ -60,7 +89,7 @@ export default function RegistroEncargado() {
 
         <div className="flex justify-end gap-2 mt-6">
           <Link to="/" className="border border-primario text-primario px-4 py-2 rounded">Cancelar</Link>
-          <button onClick={() => setEnviado(true)} className="bg-primario text-white px-4 py-2 rounded">Registrar encargado</button>
+          <button onClick={registrar} className="bg-primario text-white px-4 py-2 rounded">Registrar encargado</button>
         </div>
       </div>
     </Pagina>

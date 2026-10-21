@@ -2,24 +2,25 @@ import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import Pagina from '../../components/Pagina';
 import { carreras } from '../../datos';
+import { usePrestamos } from '../../context/PrestamosContext';
+import { validarRegistro } from '../../utils/cuenta';
 
 export default function Registro() {
-  const [form, setForm] = useState({ nombres: '', apellidos: '', carrera: '', ciclo: '', correo: '', password: '', confirmar: '' });
+  const [form, setForm] = useState({ nombres: '', apellidos: '', carrera: '', ciclo: '', correo: '', password: '', confirmar: '', acepta: false });
   const [mensaje, setMensaje] = useState('');
+  const [errores, setErrores] = useState({});
+  const { registrarEstudiante } = usePrestamos();
 
   function cambiar(e) {
     setForm({ ...form, [e.target.name]: e.target.value });
   }
 
   function crearCuenta() {
-    if (!form.correo.endsWith('@aloe.ulima.edu.pe')) {
-      setMensaje('El correo debe terminar en @aloe.ulima.edu.pe');
-      return;
-    }
-    if (form.password !== form.confirmar) {
-      setMensaje('Las contraseñas no coinciden.');
-      return;
-    }
+    const encontrados = validarRegistro(form, 'estudiante');
+    setErrores(encontrados);
+    if (Object.keys(encontrados).length > 0) { setMensaje('Revisa los campos marcados.'); return; }
+    const resultado = registrarEstudiante(form);
+    if (resultado.error) { setErrores({ correo: resultado.error }); setMensaje(resultado.error); return; }
     setMensaje('ok');
   }
 
@@ -29,12 +30,12 @@ export default function Registro() {
         <h1 className="text-2xl font-semibold">Crea tu cuenta de estudiante</h1>
         <p className="text-gris mb-6">Solo se admiten correos @aloe.ulima.edu.pe.</p>
 
-        {mensaje === 'ok' ? (
+        {mensaje === 'ok' && (
           <p className="bg-green-50 border border-green-300 text-exito p-3 rounded mb-4">
-            Cuenta creada. Enviamos un enlace de verificación a {form.correo}.
+            Registro completado para {form.correo}. <Link to={`/login?correo=${encodeURIComponent(form.correo)}`} className="underline">Continuar al acceso</Link>.
           </p>
-        ) : (
-          mensaje && <p className="bg-red-50 border border-red-300 text-peligro p-3 rounded mb-4">{mensaje}</p>
+        )}
+        {mensaje !== 'ok' && mensaje !== '' && ( <p className="bg-red-50 border border-red-300 text-peligro p-3 rounded mb-4">{mensaje}</p>
         )}
 
         <h2 className="text-xs font-semibold uppercase text-primario border-b border-borde pb-2 mb-4">Datos personales</h2>
@@ -42,10 +43,12 @@ export default function Registro() {
           <div>
             <label className="block text-xs font-semibold uppercase mb-1">Nombres</label>
             <input name="nombres" value={form.nombres} onChange={cambiar} className="w-full border border-borde rounded px-3 py-2" />
+            {errores.nombres && <p role="alert" className="text-peligro text-sm">{errores.nombres}</p>}
           </div>
           <div>
             <label className="block text-xs font-semibold uppercase mb-1">Apellidos</label>
             <input name="apellidos" value={form.apellidos} onChange={cambiar} className="w-full border border-borde rounded px-3 py-2" />
+            {errores.apellidos && <p role="alert" className="text-peligro text-sm">{errores.apellidos}</p>}
           </div>
           <div>
             <label className="block text-xs font-semibold uppercase mb-1">Carrera</label>
@@ -53,6 +56,7 @@ export default function Registro() {
               <option value="">Selecciona</option>
               {carreras.map((c) => <option key={c}>{c}</option>)}
             </select>
+            {errores.carrera && <p role="alert" className="text-peligro text-sm">{errores.carrera}</p>}
           </div>
           <div>
             <label className="block text-xs font-semibold uppercase mb-1">Ciclo</label>
@@ -60,26 +64,37 @@ export default function Registro() {
               <option value="">Selecciona</option>
               {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((n) => <option key={n}>{n}</option>)}
             </select>
+            {errores.ciclo && <p role="alert" className="text-peligro text-sm">{errores.ciclo}</p>}
           </div>
         </div>
 
         <h2 className="text-xs font-semibold uppercase text-primario border-b border-borde pb-2 mb-4">Acceso</h2>
         <label className="block text-xs font-semibold uppercase mb-1">Correo institucional</label>
-        <input name="correo" value={form.correo} onChange={cambiar} placeholder="nombre@aloe.ulima.edu.pe" className="w-full border border-borde rounded px-3 py-2 mb-4" />
+        <input
+          name="correo"
+          value={form.correo}
+          onChange={cambiar}
+          placeholder="nombre@aloe.ulima.edu.pe"
+          className="w-full border border-borde rounded px-3 py-2 mb-4"
+        />
+            {errores.correo && <p role="alert" className="text-peligro text-sm">{errores.correo}</p>}
         <div className="grid grid-cols-2 gap-4 mb-4">
           <div>
             <label className="block text-xs font-semibold uppercase mb-1">Contraseña</label>
             <input type="password" name="password" value={form.password} onChange={cambiar} className="w-full border border-borde rounded px-3 py-2" />
+            {errores.password && <p role="alert" className="text-peligro text-sm">{errores.password}</p>}
             <p className="text-xs text-gris mt-1">Mínimo 8 caracteres, una mayúscula y un número.</p>
           </div>
           <div>
             <label className="block text-xs font-semibold uppercase mb-1">Confirmar contraseña</label>
             <input type="password" name="confirmar" value={form.confirmar} onChange={cambiar} className="w-full border border-borde rounded px-3 py-2" />
+            {errores.confirmar && <p role="alert" className="text-peligro text-sm">{errores.confirmar}</p>}
           </div>
         </div>
-        <label className="text-sm"><input type="checkbox" /> Acepto el reglamento de préstamo de equipos.</label>
+        <label className="text-sm"><input type="checkbox" checked={form.acepta} onChange={(e) => setForm({ ...form, acepta: e.target.checked })} /> Acepto el reglamento de préstamo de equipos.</label>
+        {errores.acepta && <p role="alert" className="text-peligro text-sm">{errores.acepta}</p>}
 
-        <div className="flex justify-between items-center mt-6 pt-4 border-t border-borde">
+        <div className="flex flex-wrap gap-3 justify-between items-center mt-6 pt-4 border-t border-borde">
           <Link to="/registro-encargado" className="text-sm text-primario">¿Eres encargado? Regístrate aquí</Link>
           <div className="flex gap-2">
             <Link to="/" className="border border-primario text-primario px-4 py-2 rounded">Cancelar</Link>

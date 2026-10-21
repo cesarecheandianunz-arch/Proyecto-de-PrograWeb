@@ -1,9 +1,14 @@
 import { useState } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
+import { useNavigate, Link, useSearchParams, useLocation } from 'react-router-dom';
 import Pagina from '../../components/Pagina';
+import { useCuenta } from '../../context/CuentaContext';
+import { correoInstitucional } from '../../utils/cuenta';
 
 export default function Login() {
-  const [correo, setCorreo] = useState('');
+  const [parametros] = useSearchParams();
+  const location = useLocation();
+  const { seleccionarEstudiante } = useCuenta();
+  const [correo, setCorreo] = useState(parametros.get('correo') || '');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const navigate = useNavigate();
@@ -13,10 +18,12 @@ export default function Login() {
       setError('Completa tu correo y contraseña.');
       return;
     }
+    if (!correoInstitucional(correo)) { setError('Ingresa un correo institucional válido.'); return; }
     // Por ahora no hay backend: si es correo de personal va al panel, si no al catálogo
-    if (correo.endsWith('@ulima.edu.pe') && !correo.endsWith('@aloe.ulima.edu.pe')) {
+    if (correo.trim().toLowerCase().endsWith('@ulima.edu.pe')) {
       navigate('/encargado/inventario');
     } else {
+      seleccionarEstudiante(correo);
       navigate('/catalogo');
     }
   }
@@ -25,6 +32,7 @@ export default function Login() {
     <Pagina tipo="publico">
       <div className="max-w-md mx-auto bg-white border border-borde rounded p-8 mt-8">
         <h1 className="text-2xl font-semibold">Inicia sesión</h1>
+        {location.state?.mensaje && <p role="status" className="bg-primario-suave p-3 my-3">{location.state.mensaje}</p>}
         <p className="text-gris mb-6">Usa tu correo institucional para solicitar y seguir tus préstamos.</p>
 
         {error && <p className="bg-red-50 border border-red-300 text-peligro text-sm p-3 rounded mb-4">{error}</p>}

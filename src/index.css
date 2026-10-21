@@ -22,3 +22,21 @@ body {
   background-color: var(--color-fondo);
   color: var(--color-texto);
 }
+
+input, select, textarea { min-width: 0; }
+
+/* Los formularios señalan el error con texto y con el borde del campo. */
+[aria-invalid="true"] {
+  border-color: var(--color-peligro);
+}
+
+button:not(:disabled), a, select, input[type="checkbox"], input[type="radio"] {
+  cursor: pointer;
+}
+
+@media print {
+  header, aside, footer, .print-hidden { display: none; }
+  main { padding: 0; }
+  body { background: white; }
+  .constancia-impresa { position: absolute; left: 0; top: 0; width: 100%; max-width: none; border: 0; }
+}
