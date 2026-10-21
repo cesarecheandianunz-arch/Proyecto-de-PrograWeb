@@ -81,6 +81,15 @@ test('fotografías: enlaces opcionales con protocolo http o https', () => {
   }
 });
 
+test('fotografías locales: admite public/img y rechaza otras rutas y archivos', () => {
+  for (const url of ['/img/camara.jpg', '/img/almacen.jpeg', '/img/equipo.png', '/img/equipo.webp']) {
+    assert.deepEqual(validarEquipo({ ...equipo, fotografias: [url] }, []), {});
+  }
+  for (const url of ['/img/../secreto.jpg', '/img/documento.html', '/otra/foto.jpg', '//otro.com/foto.jpg']) {
+    assert.ok(validarEquipo({ ...equipo, fotografias: [url] }, []).fotografias);
+  }
+});
+
 test('eliminar: protege préstamos, solicitudes e historial asociado', () => {
   assert.ok(impedimentoEliminar(equipo, unidades, [], []));
   const sinPrestadas = unidades.filter((unidad) => unidad.estado !== 'Prestada');

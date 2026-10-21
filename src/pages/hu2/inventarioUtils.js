@@ -103,6 +103,11 @@ export function validarCondiciones(duracion, penalidad) {
 }
 
 export function fotoValida(url) {
+  // Imágenes incluidas en el proyecto: se sirven desde public/img.
+  if (url.startsWith('/img/') && !url.includes('..') && !url.includes('\\')) {
+    const nombre = url.toLowerCase();
+    return nombre.endsWith('.jpg') || nombre.endsWith('.jpeg') || nombre.endsWith('.png') || nombre.endsWith('.webp');
+  }
   // Las imágenes seleccionadas con FileReader se guardan como texto de imagen.
   if (url.startsWith('data:image/png;base64,') || url.startsWith('data:image/jpeg;base64,')) {
     return url.length <= 800050;

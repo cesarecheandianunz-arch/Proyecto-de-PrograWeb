@@ -45,10 +45,12 @@ export default function RegistroEncargado() {
           <div>
             <label className="block text-xs font-semibold uppercase mb-1">Nombres</label>
             <input value={nombres} onChange={(e) => setNombres(e.target.value)} className="w-full border border-borde rounded px-3 py-2" />
+              {errores.nombres && <p role="alert" className="text-peligro text-sm">{errores.nombres}</p>}
           </div>
           <div>
             <label className="block text-xs font-semibold uppercase mb-1">Apellidos</label>
             <input value={apellidos} onChange={(e) => setApellidos(e.target.value)} className="w-full border border-borde rounded px-3 py-2" />
+              {errores.apellidos && <p role="alert" className="text-peligro text-sm">{errores.apellidos}</p>}
           </div>
           <div>
             <label className="block text-xs font-semibold uppercase mb-1">Correo institucional</label>
@@ -58,10 +60,12 @@ export default function RegistroEncargado() {
               placeholder="nombre@ulima.edu.pe"
               className="w-full border border-borde rounded px-3 py-2"
             />
+              {errores.correo && <p role="alert" className="text-peligro text-sm">{errores.correo}</p>}
           </div>
           <div>
             <label className="block text-xs font-semibold uppercase mb-1">Contraseña</label>
             <input type="password" value={password} onChange={(e) => setPassword(e.target.value)} className="w-full border border-borde rounded px-3 py-2" />
+              {errores.password && <p role="alert" className="text-peligro text-sm">{errores.password}</p>}
           </div>
           <div>
             <label className="block text-xs font-semibold uppercase mb-1">Confirmar contraseña</label>

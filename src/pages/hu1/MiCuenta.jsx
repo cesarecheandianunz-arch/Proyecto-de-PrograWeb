@@ -46,10 +46,12 @@ export default function MiCuenta() {
             <div>
               <label className="block text-xs font-semibold uppercase mb-1">Nombres</label>
               <input value={nombres} onChange={(e) => setNombres(e.target.value)} className="w-full border border-borde rounded px-3 py-2" />
+              {errores.nombres && <p role="alert" className="text-peligro text-sm">{errores.nombres}</p>}
             </div>
             <div>
               <label className="block text-xs font-semibold uppercase mb-1">Apellidos</label>
               <input value={apellidos} onChange={(e) => setApellidos(e.target.value)} className="w-full border border-borde rounded px-3 py-2" />
+              {errores.apellidos && <p role="alert" className="text-peligro text-sm">{errores.apellidos}</p>}
             </div>
             <div>
               <label className="block text-xs font-semibold uppercase mb-1">Carrera</label>
@@ -61,6 +63,7 @@ export default function MiCuenta() {
             <div>
               <label className="block text-xs font-semibold uppercase mb-1">Celular</label>
               <input value={celular} onChange={(e) => setCelular(e.target.value)} className="w-full border border-borde rounded px-3 py-2" />
+              {errores.celular && <p role="alert" className="text-peligro text-sm">{errores.celular}</p>}
             </div>
             <div>
               <label className="block text-xs font-semibold uppercase mb-1">Correo institucional</label>
@@ -83,6 +86,7 @@ export default function MiCuenta() {
             placeholder="Contraseña actual"
             className="w-full border border-borde rounded px-3 py-2 mb-3"
           />
+              {errores.actual && <p role="alert" className="text-peligro text-sm">{errores.actual}</p>}
           <input
             type="password"
             value={nueva}
@@ -90,6 +94,7 @@ export default function MiCuenta() {
             placeholder="Nueva"
             className="w-full border border-borde rounded px-3 py-2 mb-3"
           />
+              {errores.nueva && <p role="alert" className="text-peligro text-sm">{errores.nueva}</p>}
           <input
             type="password"
             value={confirmar}
@@ -97,6 +102,7 @@ export default function MiCuenta() {
             placeholder="Confirmar"
             className="w-full border border-borde rounded px-3 py-2 mb-3"
           />
+              {errores.confirmar && <p role="alert" className="text-peligro text-sm">{errores.confirmar}</p>}
           <button onClick={cambiarPassword} className="w-full bg-primario text-white py-2 rounded">Actualizar contraseña</button>
         </div>
       </div>

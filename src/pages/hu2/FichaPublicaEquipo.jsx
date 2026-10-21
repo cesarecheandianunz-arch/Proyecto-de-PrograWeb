@@ -221,6 +221,11 @@ export default function FichaPublicaEquipo({ tipo = 'publico' }) {
           {equipo.libres === 0 && (
             <p className="text-alerta">No hay unidades disponibles actualmente.</p>
           )}
+          {equipo.libres === 0 && equipo.prestadas > 0 && (
+            <Link to={enlaceSolicitud} className="block text-center border border-primario text-primario rounded px-3 py-2 mt-3">
+              Consultar fechas para solicitar
+            </Link>
+          )}
 
           <p className="text-sm text-gris border-t border-borde pt-4 mt-4">
             Recojo en Almacén H-102, lunes a viernes de 08:00 a 19:00.

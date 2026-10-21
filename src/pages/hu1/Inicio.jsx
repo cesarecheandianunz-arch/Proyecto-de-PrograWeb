@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import Navbar from '../../components/Navbar';
 import Footer from '../../components/Footer';
+import FotoEquipo from '../../components/FotoEquipo';
 import { useInventario } from '../../context/InventarioContext';
 
 export default function Inicio() {
@@ -34,8 +35,8 @@ export default function Inicio() {
               <button onClick={buscar} className="bg-primario text-white px-6 rounded">Buscar</button>
             </div>
           </div>
-          <div className="h-64 bg-white border border-borde rounded grid place-items-center text-sm text-gris font-mono">
-            fotografía del almacén
+          <div className="h-64 bg-white border border-borde rounded overflow-hidden grid place-items-center">
+            <FotoEquipo url="/img/almacen.jpg" nombre="Almacén de equipos de laboratorio" />
           </div>
         </div>
       </section>

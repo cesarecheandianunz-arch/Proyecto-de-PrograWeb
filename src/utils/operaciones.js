@@ -69,6 +69,9 @@ export function registrarEntrega(datos, codigo, formulario, equipos, unidades) {
   if (!equipo || !estudiante || estudiante.deuda > 0 || estudiante.bloqueada) return { error: 'El equipo no existe o el estudiante tiene deuda o bloqueo.' };
   const dia = formulario.fecha.slice(0, 10);
   if (!fechaValida(dia) || formulario.fecha.length !== 16 || dia > hoyISO() || dia < solicitud.inicio || dia > solicitud.fin) return { error: 'La entrega debe estar dentro del rango aprobado y no puede ser futura.' };
+  // Aprobar para una fecha futura no equivale a tener físicamente la unidad hoy.
+  const unidad = unidades.find((u) => u.codigo === solicitud.unidad);
+  if (!unidad || unidad.estado !== 'Disponible' || (unidad.prestamo && unidad.prestamo !== '—')) return { error: 'La unidad debe haber sido devuelta y estar disponible antes de registrar otra entrega.' };
   const disponibles = unidadesDisponibles(equipo.id, dia, solicitud.fin, unidades, datos.solicitudes, datos.prestamos, codigo);
   if (disponibles.filter((u) => u.codigo === solicitud.unidad).length === 0) return { error: 'La unidad ya no está disponible. Revisa la asignación.' };
   const prestamo = {

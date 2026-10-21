@@ -80,7 +80,10 @@ export default function Catalogo() {
         Consulta el detalle de un equipo y sus condiciones antes de solicitarlo.
       </p>
 
-      <div className="flex flex-wrap gap-3 mb-4">
+      <div className="grid lg:grid-cols-[230px_1fr] gap-6 items-start">
+      <aside className="bg-white border border-borde rounded p-4">
+        <h2 className="font-semibold text-primario mb-4">Filtros</h2>
+      <div className="grid gap-3">
         <input
           aria-label="Buscar equipo o código"
           value={busqueda}
@@ -118,16 +121,7 @@ export default function Catalogo() {
           <option value="7">Hasta 7 días</option>
           <option value="15">Hasta 15 días</option>
         </select>
-        <select
-          aria-label="Ordenar equipos"
-          value={orden}
-          onChange={(e) => { setOrden(e.target.value); setPagina(1); }}
-          className="border border-borde rounded px-3 py-2 bg-white"
-        >
-          <option value="nombre">Ordenar: nombre</option>
-          <option value="categoria">Ordenar: categoría</option>
-          <option value="disponibles">Ordenar: más disponibles</option>
-        </select>
+
         <button
           type="button"
           onClick={() => {
@@ -144,22 +138,36 @@ export default function Catalogo() {
         </button>
       </div>
 
-      <p className="text-sm text-gris mb-4">{lista.length} equipos encontrados</p>
+      </aside>
+      <section className="min-w-0">
+      <div className="flex flex-wrap justify-between items-center gap-3 mb-4">
+      <p className="text-sm text-gris">{lista.length} equipos encontrados</p>
+        <select
+          aria-label="Ordenar equipos"
+          value={orden}
+          onChange={(e) => { setOrden(e.target.value); setPagina(1); }}
+          className="border border-borde rounded px-3 py-2 bg-white"
+        >
+          <option value="nombre">Ordenar: nombre</option>
+          <option value="categoria">Ordenar: categoría</option>
+          <option value="disponibles">Ordenar: más disponibles</option>
+        </select>
+      </div>
       {lista.length === 0 && (
         <p className="bg-white border border-borde rounded p-8 text-center text-gris">
           No hay equipos que coincidan con la búsqueda y tengan unidades activas.
         </p>
       )}
 
-      <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6">
+      <div className="grid sm:grid-cols-2 xl:grid-cols-4 gap-4">
         {visibles.map((equipo) => (
           <article key={equipo.id} className="bg-white border border-borde rounded overflow-hidden">
-            <div className="aspect-square bg-gray-100 grid place-items-center">
+            <div className="h-36 bg-gray-100 grid place-items-center overflow-hidden">
               <FotoEquipo url={equipo.fotografias?.[0]} nombre={equipo.nombre} />
             </div>
-            <div className="p-5">
+            <div className="p-4">
               <p className="text-xs uppercase text-gris">{equipo.categoria}</p>
-              <h2 className="text-xl font-semibold mt-1">{equipo.nombre}</h2>
+              <h2 className="text-lg font-semibold mt-1">{equipo.nombre}</h2>
               <p className="text-sm text-gris">{equipo.marca} · {equipo.modelo}</p>
               <p className="font-mono text-sm mt-3">
                 {equipo.libres} de {equipo.total} unidades disponibles
@@ -171,7 +179,7 @@ export default function Catalogo() {
                 >
                   Ver detalle
                 </Link>
-                {equipo.libres > 0 && (
+                {(equipo.libres > 0 || equipo.prestadas > 0) && (
                   <Link
                     to={enlaceSolicitud(equipo.id)}
                     className="bg-primario text-white rounded px-4 py-2"
@@ -186,6 +194,8 @@ export default function Catalogo() {
       </div>
       <p className="text-sm text-gris mt-4">Mostrando {Math.min(inicio + 1, lista.length)} a {Math.min(inicio + 8, lista.length)} de {lista.length} equipos</p>
       <Paginacion pagina={paginaActual} paginas={paginas} onCambiar={setPagina} />
+      </section>
+      </div>
     </Pagina>
   );
 }

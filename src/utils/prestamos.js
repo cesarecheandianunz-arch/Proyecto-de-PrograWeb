@@ -33,14 +33,24 @@ export function rangosCruzan(inicio, fin, otroInicio, otroFin) {
 }
 
 export function unidadesDisponibles(equipoId, inicio, fin, unidades, solicitudes, prestamos, excluirCodigo = '') {
+  if (!fechaValida(inicio) || !fechaValida(fin) || fin <= inicio) return [];
   return unidades.filter((unidad) => {
-    if (unidad.equipoId !== Number(equipoId) || unidad.estado !== 'Disponible') return false;
+    if (unidad.equipoId !== Number(equipoId)) return false;
+    if (unidad.estado !== 'Disponible' && unidad.estado !== 'Prestada') return false;
+    let tienePrestamoActivo = false;
     for (const solicitud of solicitudes) {
       if (solicitud.codigo !== excluirCodigo && solicitud.estado === 'Aprobada' && solicitud.unidad === unidad.codigo && rangosCruzan(inicio, fin, solicitud.inicio, solicitud.fin)) return false;
     }
     for (const prestamo of prestamos) {
-      if (prestamo.codigo !== excluirCodigo && prestamo.estado === 'Activo' && prestamo.unidad === unidad.codigo) return false;
+      if (prestamo.codigo !== excluirCodigo && prestamo.estado === 'Activo' && prestamo.unidad === unidad.codigo) {
+        tienePrestamoActivo = true;
+        // Un vencido aún sin devolver no tiene una fecha de disponibilidad segura.
+        if (!fechaValida(prestamo.fin) || prestamo.fin < hoyISO()) return false;
+        let ocupadoDesde = prestamo.inicio || hoyISO();
+        if (rangosCruzan(inicio, fin, ocupadoDesde, prestamo.fin)) return false;
+      }
     }
+    if (unidad.estado === 'Prestada' && !tienePrestamoActivo) return false;
     return true;
   });
 }

@@ -5,6 +5,7 @@ import { crearOperacionesIniciales } from '../src/data/prestamosIniciales.js';
 import { crearSolicitud, aprobarSolicitud, rechazarSolicitud, retirarSolicitud, registrarEntrega, registrarDevolucion, renovarPrestamo } from '../src/utils/operaciones.js';
 import { hoyISO, sumarDias, diasEntre, fechaValida, unidadesDisponibles, calcularPenalidad } from '../src/utils/prestamos.js';
 import { validarRegistro } from '../src/utils/cuenta.js';
+import { completarEquiposIniciales } from '../src/utils/inventarioInicial.js';
 
 function escenario() {
   const equipo = { id: 99, nombre: 'Equipo de prueba', duracion: 7, autorizacion: true, renovacion: true, penalidad: 20 };
@@ -134,4 +135,43 @@ test('registro valida campos vacíos, dominio, contraseña y aceptación', () =>
   const errores = validarRegistro(datos, 'estudiante');
   for (const campo of ['nombres', 'apellidos', 'carrera', 'ciclo', 'correo', 'password', 'confirmar', 'acepta']) assert.ok(errores[campo]);
   assert.deepEqual(validarRegistro({ nombres: 'Ana', apellidos: 'Pérez', carrera: 'Ingeniería', ciclo: '5', correo: 'ana@aloe.ulima.edu.pe', password: 'Clase2026', confirmar: 'Clase2026', acepta: true }, 'estudiante'), {});
+});
+
+test('disponibilidad futura: permite después del vencimiento, evita cruces y vencidos sin devolver', () => {
+  const hoy = hoyISO();
+  const unidad = { codigo: 'INV-TST-0001', equipoId: 99, estado: 'Prestada', prestamo: 'PRE-2026-0099' };
+  const prestamo = { codigo: unidad.prestamo, unidad: unidad.codigo, estado: 'Activo', inicio: hoy, fin: sumarDias(hoy, 2) };
+  const desde = sumarDias(hoy, 10);
+  const hasta = sumarDias(hoy, 12);
+  assert.equal(unidadesDisponibles(99, desde, hasta, [unidad], [], [prestamo]).length, 1);
+  assert.equal(unidadesDisponibles(99, hoy, sumarDias(hoy, 1), [unidad], [], [prestamo]).length, 0);
+  assert.equal(unidadesDisponibles(99, desde, hasta, [unidad], [], [{ ...prestamo, fin: sumarDias(hoy, -1) }]).length, 0);
+  assert.equal(unidadesDisponibles(99, desde, hasta, [{ ...unidad, estado: 'Mantenimiento' }], [], [prestamo]).length, 0);
+  assert.equal(unidadesDisponibles(99, desde, hasta, [unidad], [], []).length, 0);
+  const aprobada = { codigo: 'otra', unidad: unidad.codigo, estado: 'Aprobada', inicio: desde, fin: hasta };
+  assert.equal(unidadesDisponibles(99, desde, hasta, [unidad], [aprobada], [prestamo]).length, 0);
+});
+
+test('una aprobación futura no permite entregar una unidad que sigue prestada', () => {
+  const { equipo, datos } = escenario();
+  const hoy = hoyISO();
+  const unidad = { codigo: 'INV-TST-0001', equipoId: 99, estado: 'Prestada', prestamo: 'PRE-2026-0099' };
+  const anterior = { codigo: unidad.prestamo, unidad: unidad.codigo, equipoId: 99, estado: 'Activo', inicio: hoy, fin: sumarDias(hoy, 2) };
+  const solicitud = { codigo: 'PRE-2026-0100', equipoId: 99, estudianteId: 'prueba', inicio: sumarDias(hoy, 10), fin: sumarDias(hoy, 12), estado: 'Enviada' };
+  const estado = { ...datos, solicitudes: [solicitud], prestamos: [anterior] };
+  const aprobada = aprobarSolicitud(estado, solicitud.codigo, unidad.codigo, [equipo], [unidad], true);
+  assert.equal(aprobada.datos.solicitudes[0].estado, 'Aprobada');
+  const intentaEntregar = { ...aprobada.datos, solicitudes: [{ ...aprobada.datos.solicitudes[0], inicio: hoy }] };
+  const resultado = registrarEntrega(intentaEntregar, solicitud.codigo, { fecha: hoy + 'T09:00', accesorios: [], observaciones: '' }, [equipo], [unidad]);
+  assert.match(resultado.error, /devuelta/);
+});
+
+test('imágenes iniciales: completa vacíos y conserva fotos y descripciones editadas', () => {
+  const inicial = { id: 1, marca: 'Marca', modelo: 'Modelo', fotografias: ['/img/camara.jpg'], descripcion: 'Descripción inicial' };
+  const propio = { ...inicial, fotografias: ['https://ejemplo.com/propia.jpg'], descripcion: 'Texto propio' };
+  assert.deepEqual(completarEquiposIniciales([propio], [inicial]), [propio]);
+  const vacio = { ...inicial, fotografias: [], descripcion: '' };
+  assert.deepEqual(completarEquiposIniciales([vacio], [inicial])[0], inicial);
+  const otroModelo = { ...vacio, modelo: 'Otro' };
+  assert.deepEqual(completarEquiposIniciales([otroModelo], [inicial])[0], otroModelo);
 });

@@ -1,6 +1,7 @@
 import { createContext, useContext, useState, useEffect } from 'react';
 import { equipos as equiposIniciales, unidades as unidadesIniciales } from '../datos';
 import { contarUnidades } from '../pages/hu2/inventarioUtils';
+import { completarEquiposIniciales } from '../utils/inventarioInicial';
 
 const InventarioContext = createContext();
 
@@ -18,7 +19,13 @@ function leerGuardados(clave, iniciales) {
 }
 
 export function InventarioProvider({ children }) {
-  const [equipos, setEquipos] = useState(() => leerGuardados('equipos', equiposIniciales));
+  const [equipos, setEquipos] = useState(() => {
+    const guardados = leerGuardados('equipos', equiposIniciales);
+    try {
+      if (localStorage.getItem('imagenes-iniciales-v2')) return guardados;
+    } catch { return guardados; }
+    return completarEquiposIniciales(guardados, equiposIniciales);
+  });
   const [unidades, setUnidades] = useState(() => {
     const guardadas = leerGuardados('unidades', unidadesIniciales);
     // Completamos solo las unidades semilla ausentes, una vez, sin reemplazar cambios.
@@ -37,9 +44,16 @@ export function InventarioProvider({ children }) {
 
   useEffect(() => {
     try {
-      localStorage.setItem('equipos', JSON.stringify(equipos));
+      let actualizados = equipos;
+      // También cubre el caso de tener la aplicación abierta durante estos cambios.
+      if (!localStorage.getItem('imagenes-iniciales-v2')) {
+        actualizados = completarEquiposIniciales(equipos, equiposIniciales);
+        setEquipos(actualizados);
+      }
+      localStorage.setItem('equipos', JSON.stringify(actualizados));
       localStorage.setItem('unidades', JSON.stringify(unidades));
       localStorage.setItem('unidades-semilla-v2', '1');
+      localStorage.setItem('imagenes-iniciales-v2', '1');
       setErrorPersistencia('');
     } catch {
       setErrorPersistencia('Los cambios están en esta sesión, pero el navegador no pudo guardarlos. Podrían perderse al recargar.');

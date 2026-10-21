@@ -127,7 +127,7 @@ Cada compañero debe revisar sus cambios, ejecutar la demostración y poder expl
 
 ## Verificación realizada
 
-- `npm test`: 25 pruebas de reglas, datos semilla y recorrido integrado.
+- `npm test`: 29 pruebas de reglas, datos semilla y recorrido integrado.
 - `npm run build`: compilación completa de las cinco historias.
 - Chrome con perfil temporal: solicitud → aprobación → entrega → constancia → devolución → recarga; comprobación de cambios en inventario y préstamos.
 - Chrome: filtros, rechazo compartido, deuda que bloquea la aprobación, renovación y su límite, daños con tarifa del equipo, pago, archivo de imagen, borrador recuperado, unidad nueva y perfil conservado tras recargar.
@@ -135,3 +135,11 @@ Cada compañero debe revisar sus cambios, ejecutar la demostración y poder expl
 
 Las pruebas del navegador usaron un perfil temporal, independiente del navegador personal. No borraron los datos del navegador del estudiante.
 - Comprobación adicional: 83 enlaces internos corresponden a rutas declaradas. Diez pantallas principales revisadas a 390 px de ancho sin desbordar horizontalmente la página.
+
+## Correcciones finales e imágenes
+
+- Los errores de nombres, apellidos, correo, celular y contraseñas se muestran junto al campo correspondiente en Mi cuenta y Registro de encargado.
+- La disponibilidad futura contempla el vencimiento de un préstamo activo, evita cruces y mantiene bloqueados los vencidos sin devolver. La entrega sigue requiriendo que la unidad esté físicamente devuelta.
+- El catálogo tiene filtros laterales en escritorio y tarjetas más compactas.
+- Las imágenes se copian en `public/img`; el [README de imágenes](../public/img/README.md) lista los nueve nombres. Las rutas ya están configuradas, incluyendo la fotografía del almacén.
+- Se admiten rutas locales `/img/` en la validación. Las fotos iniciales vacías y descripciones genéricas antiguas se completan una vez; se conservan las ediciones propias.

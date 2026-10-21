@@ -33,7 +33,9 @@ Las pruebas cubren las reglas de HU-2 y el recorrido integrado de préstamos.
 La explicación por historia, los complementos y la demostración están en
 [Integracion-frontend-paso-a-paso.md](docs/Integracion-frontend-paso-a-paso.md).
 
-Para imágenes se admiten enlaces HTTP/HTTPS o selección de JPG/PNG, hasta tres
+Para las imágenes de entrega, copia los nueve archivos indicados en [public/img/README.md](public/img/README.md). Las rutas ya están configuradas.
+
+También se admiten rutas locales `/img/`, enlaces HTTP/HTTPS o selección de JPG/PNG, hasta tres
 fotografías por equipo y 600 KB por archivo. No se necesitan servicios externos.
 
 ## Dónde está cada historia
