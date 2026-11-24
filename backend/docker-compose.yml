@@ -1,0 +1,30 @@
+# Base de datos y correo de desarrollo. La API corre con `npm run dev` fuera de Docker.
+# Puertos del host poco comunes (5435, 1026, 8026) para no chocar con otros proyectos.
+name: almacen-equipos
+
+services:
+  db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: almacen
+      POSTGRES_PASSWORD: almacen
+      POSTGRES_DB: almacen
+    ports:
+      - "5435:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U almacen -d almacen"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  # Bandeja de correo falsa: los correos de recuperación se ven en http://localhost:8026
+  mailpit:
+    image: axllent/mailpit:v1.27
+    ports:
+      - "1026:1025"
+      - "8026:8025"
+
+volumes:
+  pgdata:

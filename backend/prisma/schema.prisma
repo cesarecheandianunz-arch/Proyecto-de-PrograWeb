@@ -1,0 +1,230 @@
+// Schema ÚNICO y compartido por todo el equipo.
+// Regla: cada uno solo agrega campos/modelos en la sección de su HU.
+// No renombres ni borres campos de otra HU sin acordarlo en el grupo.
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// =====================================================================
+// HU-1 · Cuentas: registro, acceso, perfil y recuperación
+// =====================================================================
+
+enum Rol {
+  ESTUDIANTE
+  ENCARGADO
+  JEFE
+}
+
+enum EstadoCuenta {
+  ACTIVA
+  PENDIENTE // encargado recién registrado, espera aprobación del jefe
+  RECHAZADA
+}
+
+model Usuario {
+  id           String       @id @default(cuid())
+  correo       String       @unique
+  passwordHash String
+  nombres      String
+  apellidos    String
+  rol          Rol
+  estado       EstadoCuenta @default(ACTIVA)
+
+  // Solo estudiantes
+  carrera            String?
+  ciclo              Int?
+  celular            String?
+  aceptoReglamentoEn DateTime?
+
+  // Solo encargados
+  almacenId Int?
+  almacen   Almacen? @relation(fields: [almacenId], references: [id])
+  anexo     String?
+
+  creadoEn      DateTime @default(now())
+  actualizadoEn DateTime @updatedAt
+
+  tokensRecuperacion TokenRecuperacion[]
+  solicitudes        Solicitud[] // HU-3
+  prestamos          Prestamo[] // HU-4
+  pagos              Pago[] // HU-5
+}
+
+model TokenRecuperacion {
+  id        Int       @id @default(autoincrement())
+  tokenHash String    @unique // se guarda el hash, nunca el token
+  usuarioId String
+  usuario   Usuario   @relation(fields: [usuarioId], references: [id], onDelete: Cascade)
+  expiraEn  DateTime
+  usadoEn   DateTime?
+  creadoEn  DateTime  @default(now())
+}
+
+// Catálogos que usan los formularios de registro
+model Almacen {
+  id       Int       @id @default(autoincrement())
+  nombre   String    @unique
+  usuarios Usuario[]
+}
+
+model Carrera {
+  id     Int    @id @default(autoincrement())
+  nombre String @unique
+}
+
+// =====================================================================
+// HU-2 · Inventario: equipos y unidades
+// =====================================================================
+
+enum EstadoUnidad {
+  DISPONIBLE
+  PRESTADA
+  MANTENIMIENTO
+  BAJA
+}
+
+model Categoria {
+  id      Int      @id @default(autoincrement())
+  nombre  String   @unique
+  equipos Equipo[]
+}
+
+model Equipo {
+  id                   Int      @id @default(autoincrement())
+  nombre               String
+  marca                String
+  modelo               String
+  descripcion          String   @default("")
+  categoriaId          Int
+  categoria            Categoria @relation(fields: [categoriaId], references: [id])
+  fotografias          String[]
+  accesorios           String[]
+  requiereAutorizacion Boolean  @default(false)
+  permiteRenovacion    Boolean  @default(false)
+  duracionDias         Int
+  penalidadDiaria      Decimal  @db.Decimal(8, 2)
+  creadoEn             DateTime @default(now())
+
+  unidades    Unidad[]
+  solicitudes Solicitud[]
+}
+
+model Unidad {
+  codigo      String       @id // INV-OSC-0042
+  equipoId    Int
+  equipo      Equipo       @relation(fields: [equipoId], references: [id])
+  ubicacion   String
+  estado      EstadoUnidad @default(DISPONIBLE)
+  observacion String?
+
+  solicitudes Solicitud[]
+  prestamos   Prestamo[]
+}
+
+// =====================================================================
+// HU-3 · Catálogo y solicitudes del estudiante
+// =====================================================================
+
+enum EstadoSolicitud {
+  ENVIADA
+  APROBADA
+  RECHAZADA
+  ENTREGADA
+  CANCELADA
+}
+
+model Curso {
+  id     Int    @id @default(autoincrement())
+  nombre String @unique // "IN324 Laboratorio de Circuitos"
+}
+
+model Solicitud {
+  id                  Int             @id @default(autoincrement())
+  codigo              String          @unique // PRE-2026-0330
+  estudianteId        String
+  estudiante          Usuario         @relation(fields: [estudianteId], references: [id])
+  equipoId            Int
+  equipo              Equipo          @relation(fields: [equipoId], references: [id])
+  curso               String
+  motivo              String
+  inicio              DateTime        @db.Date
+  fin                 DateTime        @db.Date
+  estado              EstadoSolicitud @default(ENVIADA)
+  autorizacionDocente Boolean         @default(false)
+  motivoRechazo       String?
+  unidadCodigo        String? // unidad asignada al aprobar (HU-4)
+  unidad              Unidad?         @relation(fields: [unidadCodigo], references: [codigo])
+  creadaEn            DateTime        @default(now())
+
+  prestamo Prestamo?
+}
+
+// =====================================================================
+// HU-4 · Bandeja del encargado, entrega y préstamos activos
+// =====================================================================
+
+enum EstadoPrestamo {
+  ACTIVO
+  DEVUELTO
+}
+
+model Prestamo {
+  id            Int            @id @default(autoincrement())
+  codigo        String         @unique // mismo código que la solicitud
+  solicitudId   Int            @unique
+  solicitud     Solicitud      @relation(fields: [solicitudId], references: [id])
+  estudianteId  String
+  estudiante    Usuario        @relation(fields: [estudianteId], references: [id])
+  unidadCodigo  String
+  unidad        Unidad         @relation(fields: [unidadCodigo], references: [codigo])
+  inicio        DateTime       @db.Date
+  fin           DateTime       @db.Date
+  fechaEntrega  DateTime
+  accesorios    Json // [{ nombre, entregado }]
+  observaciones String?
+  tarifa        Decimal        @db.Decimal(8, 2) // penalidad diaria al momento de entregar
+  estado        EstadoPrestamo @default(ACTIVO)
+
+  devolucion   Devolucion?
+  renovaciones Renovacion[]
+}
+
+// =====================================================================
+// HU-5 · Devoluciones, renovaciones, historial y pagos
+// =====================================================================
+
+model Devolucion {
+  id            Int      @id @default(autoincrement())
+  prestamoId    Int      @unique
+  prestamo      Prestamo @relation(fields: [prestamoId], references: [id])
+  fecha         DateTime
+  estadoEquipo  String
+  accesorios    Json
+  observaciones String?
+  diasRetraso   Int      @default(0)
+  penalidad     Decimal  @default(0) @db.Decimal(8, 2)
+}
+
+model Renovacion {
+  id          Int      @id @default(autoincrement())
+  prestamoId  Int
+  prestamo    Prestamo @relation(fields: [prestamoId], references: [id])
+  finAnterior DateTime @db.Date
+  finNuevo    DateTime @db.Date
+  creadaEn    DateTime @default(now())
+}
+
+model Pago {
+  id           Int      @id @default(autoincrement())
+  estudianteId String
+  estudiante   Usuario  @relation(fields: [estudianteId], references: [id])
+  monto        Decimal  @db.Decimal(8, 2)
+  fecha        DateTime @default(now())
+  nota         String?
+}
