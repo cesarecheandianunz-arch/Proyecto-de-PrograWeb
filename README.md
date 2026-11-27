@@ -1,6 +1,8 @@
 # Almacén de Equipos · Tema 7 (avance)
 
-Programación Web · Universidad de Lima · 2026-2. Interfaz en React + Tailwind (solo front, sin backend).
+Programación Web · Universidad de Lima · 2026-2. Interfaz en React + Tailwind (frontend).
+
+El backend (Express + Prisma + PostgreSQL) está en otro repositorio: [ProyectoPrograWeb-Backend](https://github.com/cesarecheandianunz-arch/ProyectoPrograWeb-Backend). Con la API corriendo en el puerto 3000, `npm run dev` reenvía `/api` a ella (proxy en `vite.config.js`).
 
 Verificado con Node.js 24.21.
 
